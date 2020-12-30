@@ -1,0 +1,16 @@
+name = "avpkg"
+version = "0.1.0"
+license = "license"
+author = "Jane Doe"
+maintainer = "jane.doe@example.com"
+copyright = "2020 Jane Doe"
+
+[dependencies]
+fortran-curl = { git = "https://github.com/interkosmos/fortran-curl" }
+M_strings = { git = "https://github.com/urbanjost/M_strings.git" }
+
+[[executable]]
+name="avpkg"
+source-dir="app"
+main="main.f90"
+
