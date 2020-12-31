@@ -133,7 +133,8 @@ end module download_helper
 program main
     use M_strings, only: crop
     use functions, only: get_temp_file
-    use :: download_helper, only: download
+    use download_helper, only: download
+    use fhash, only: fhash_tbl_t, fhash_key, fhash_key_t
     implicit none
 
     character(len=*), parameter :: fpm_registry_url =&
@@ -145,9 +146,20 @@ program main
     character(len=:), allocatable :: package
     character(len=:), allocatable :: url
     integer :: ios
-    integer :: u
+    integer :: i, u
     integer :: pos1, pos2
     character(len=255), allocatable :: local_file
+    character(len=*), parameter     :: fpm_toml = "fpm.toml"
+    logical                         :: file_exists, dependencies_section_exists
+
+    type package_t
+        character(:), allocatable :: name
+        character(:), allocatable :: url
+    end type package_t
+
+    type(fhash_tbl_t) :: tbl
+    type(package_t)   :: pkg
+    integer           :: key
 
     local_file = get_temp_file()
     r = download(fpm_registry_url, local_file)
@@ -156,6 +168,7 @@ program main
         stop
     end if
 
+    key = 1
     open(newunit=u, file=local_file, status="old")
 
     do
@@ -176,11 +189,110 @@ program main
 
         if (pos1 .gt. 1 .and.  pos2 .gt. 2) then
             url = strout(pos1:pos2)
-            print *, package, ' = ', url
+            pkg%name = package
+            pkg%url = url
+            call tbl%set(fhash_key(key), value=pkg)
+            key = key + 1
         end if
     end do
 
     close(u)
+
+    ! Print the Package Table
+    print 100, 'N', 'Package Name', 'Package URL'
+    write(*,'(80("-"))')
+
+    do i = 1, key-1
+        call fhash_get_package(tbl, fhash_key(i), pkg)
+        print 200, i, pkg%name, pkg%url
+    end do
+
+    100 format(a4, a20, '   ', a)
+    200 format(i4, a20, ' = ', a)
+
+    ! Check if fpm.toml exists
+    inquire(file=fpm_toml, exist=file_exists)
+    if (.not. file_exists) then
+        print *, 'File "', fpm_toml, '" does not exist. Bye.'
+        stop
+    end if
+
+    ! Check if [dependencies] section exists
+    open(newunit=u, file=fpm_toml, status="old")
+    do
+        read(u, '(a)', iostat=ios) line
+        if (ios .ne. 0) exit
+
+        strout = crop(line)
+        pos1 = index(strout, "[dependencies]")
+
+        if (pos1 .ne. 0) then
+            dependencies_section_exists = .true.
+            exit
+        end if
+    end do
+    close(u)
+
+    if (dependencies_section_exists) then
+        print *
+        print *, '[dependencies] section found in "', fpm_toml, '". Bye.'
+        stop
+    end if
+
+    ! Ask user
+    write(*,'(80("-"))')
+    print *, 'Which package do you want to add?'
+    write (*,'(a)', advance="no") 'Enter the package number (press 0 to exit): '
+    read *, i
+
+    if (i .eq. 0) then
+        stop
+    end if
+
+    if (i .lt. 0 .or. i .gt. key - 1) then
+        print *, 'Error: number out of range'
+        stop
+    end if
+
+    call fhash_get_package(tbl, fhash_key(i), pkg)
+
+    ! Write changes to fpm.toml
+    print *, 'Inserting Package ', pkg%name, ' ...'
+    open(newunit=u, file=fpm_toml, position="append", status="old")
+    write(u, *) '[dependencies]'
+    write(u, *) pkg%name, ' = ', pkg%url
+    close(u)
+    print *, 'Done.'
+
+    contains
+
+    !
+    ! Define custom getter for package_t type
+    ! Based on original code from
+    ! https://lkedward.github.io/fhash/page/2-derived-type-demo/index.html
+    !
+    subroutine fhash_get_package(tbl, k, package)
+        type(fhash_tbl_t), intent(in) :: tbl
+        class(fhash_key_t), intent(in) :: k
+        type(package_t), intent(out) :: package
+        integer :: stat
+        class(*), allocatable :: data
+
+        call tbl%get(k, data, stat)
+
+        if (stat /= 0) then
+            print *, 'Error key not found', stat! Error handling: key not found
+            stop
+        end if
+
+        select type(d=>data)
+            type is (package_t)
+            package = d
+            class default
+            ! Error handling: found wrong type
+            print *, 'error'
+        end select
+    end subroutine fhash_get_package
 
     ! FIXME
     ! remove(local_file)

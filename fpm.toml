@@ -1,13 +1,14 @@
 name = "avpkg"
-version = "0.1.0"
+version = "0.2.0"
 license = "license"
-author = "Jane Doe"
-maintainer = "jane.doe@example.com"
+author = "Une"
+maintainer = "brocolis@eml.cc"
 copyright = "2020 Jane Doe"
 
 [dependencies]
 fortran-curl = { git = "https://github.com/interkosmos/fortran-curl" }
 M_strings = { git = "https://github.com/urbanjost/M_strings.git" }
+fhash = {git="https://github.com/LKedward/fhash", tag="v0.1.0"}
 
 [[executable]]
 name="avpkg"
