@@ -1,9 +1,9 @@
 name = "avpkg"
-version = "0.2.0"
-license = "license"
-author = "Une"
+version = "0.3.0"
+license = "ISC"
+author = "Carlos Une"
 maintainer = "brocolis@eml.cc"
-copyright = "2020 Jane Doe"
+copyright = "2021 Carlos Une"
 
 [dependencies]
 fortran-curl = { git = "https://github.com/interkosmos/fortran-curl" }
