@@ -3,24 +3,34 @@ Available Packages
 
 List available packages in the fpm-registry.
 
+## Fortran dependencies
+- fortran-curl
+- fortran-pcre
+- fhash
+
+## C dependencies
+- libjson-c
+- libpcre
+- libcurl
+
 ## Build
 ```bash
+apt-get install libjson-c-dev libpcre3-dev libcurl4-openssl-dev
 git clone https://github.com/brocolis/avpkg
 cd avpkg
 fpm build
 ```
 
 ## Usage
-`$ avpkg`
+```bash
+avpkg search package
+avpkg info package
+```
 
-
-## Dependencies
-fortran-curl = { git = "https://github.com/interkosmos/fortran-curl" }
-M_strings = { git = "https://github.com/urbanjost/M_strings.git" }
-fhash = {git="https://github.com/LKedward/fhash", tag="v0.1.0"}
-
-
-## Warning
-avpkg writes the chosen dependency to your fpm.toml file only if the [dependencies] section doesn't exist already.
-
-
+## Examples
+```bash
+avpkg search lapack
+avpkg search "thermodynamics|mechanics"
+avpkg info datetime
+avpkg search numeric
+```

@@ -1,17 +1,22 @@
 name = "avpkg"
-version = "0.3.0"
+version = "0.4.0"
 license = "ISC"
 author = "Carlos Une"
 maintainer = "brocolis@eml.cc"
 copyright = "2021 Carlos Une"
 
+[build]
+link = ["json-c"]
+
 [dependencies]
-fortran-curl = { git = "https://github.com/interkosmos/fortran-curl" }
-M_strings = { git = "https://github.com/urbanjost/M_strings.git" }
-fhash = {git="https://github.com/LKedward/fhash", tag="v0.1.0"}
+fortran-curl = {git = "https://github.com/interkosmos/fortran-curl" }
+fortran-pcre = {git = "https://github.com/brocolis/fortran-pcre"}
+fhash        = {git = "https://github.com/LKedward/fhash", tag="v0.1.0"}
+
+[library]
+source-dir="src"
 
 [[executable]]
 name="avpkg"
 source-dir="app"
 main="main.f90"
-
