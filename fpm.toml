@@ -11,7 +11,7 @@ link = ["json-c"]
 [dependencies]
 fortran-curl = {git = "https://github.com/interkosmos/fortran-curl" }
 fortran-pcre = {git = "https://github.com/brocolis/fortran-pcre"}
-fhash        = {git = "https://github.com/LKedward/fhash", tag="v0.1.0"}
+fhash        = {git = "https://github.com/LKedward/fhash"}
 
 [library]
 source-dir="src"

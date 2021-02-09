@@ -206,20 +206,12 @@ subroutine table_info(tbl, pattern)
     call pcre_free(re)
 end subroutine
 
-subroutine table_add(tbl, pkg)
-    type(fhash_tbl_t), intent(in), pointer :: tbl
-    type(package_t), intent(in) :: pkg
-    integer :: num_buckets, num_items, num_collisions, max_depth
-
-    call tbl%stats(num_buckets, num_items, num_collisions, max_depth)
-    call tbl%set(fhash_key(num_items+1), value=pkg)
-end subroutine
-
 subroutine callback(pkg, fortran_ptr) bind(c)
     type(fpm_package_t), intent(in), value :: pkg
     type(c_ptr), intent(in), value :: fortran_ptr
     type(fhash_tbl_t), pointer :: tbl
     type(package_t) :: pkg_f
+    integer :: num_buckets, num_items
 
     call c_f_pointer(fortran_ptr, tbl)
 
@@ -232,7 +224,8 @@ subroutine callback(pkg, fortran_ptr) bind(c)
     if (c_associated(pkg%git))         pkg_f%git = to_fortran_string(pkg%git)
     if (c_associated(pkg%git_tag))     pkg_f%git_tag = to_fortran_string(pkg%git_tag)
 
-    call table_add(tbl, pkg_f)
+    call tbl%stats(num_buckets, num_items)
+    call tbl%set(fhash_key(num_items+1), value=pkg_f)
 end subroutine
 
 end program main

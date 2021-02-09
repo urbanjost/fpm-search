@@ -13,9 +13,13 @@ List available packages in the fpm-registry.
 - libpcre
 - libcurl
 
-## Build
+## Install dependencies
 ```bash
 apt-get install libjson-c-dev libpcre3-dev libcurl4-openssl-dev
+yum install json-c-devel libcurl-devel pcre-devel
+```
+
+```bash
 git clone https://github.com/brocolis/avpkg
 cd avpkg
 fpm build
