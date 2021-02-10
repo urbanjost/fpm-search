@@ -67,7 +67,7 @@ static void save(void *usr, const char *key, const char *val)
         u->pkg->git_tag = val;
 }
 
-void get_packages(json_object *obj, void (*f)(void *, void *), void *usr, void *fortran_ptr)
+void get_packages(json_object *obj, void (*f)(FPM_PACKAGE, void *), void *usr, void *fortran_ptr)
 {
     USRDATA *u = (USRDATA *) usr;
 
@@ -92,12 +92,12 @@ void get_packages(json_object *obj, void (*f)(void *, void *), void *usr, void *
 
     if (u->c == 2)
     {
-        (*f)(u->pkg, fortran_ptr);
+        (*f)(*(u->pkg), fortran_ptr);
         clear(u);
     }
 }
 
-int parse_json(const char *file, void (*f)(void *, void *), void *fortran_ptr)
+int parse_json(const char *file, void (*f)(FPM_PACKAGE, void *), void *fortran_ptr)
 {
     USRDATA *u = malloc(sizeof(*u));
 
