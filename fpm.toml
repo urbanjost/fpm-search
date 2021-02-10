@@ -1,9 +1,9 @@
 name = "avpkg"
 version = "0.4.0"
 license = "ISC"
-author = "Carlos Une"
+author = "avpkg contributors"
 maintainer = "brocolis@eml.cc"
-copyright = "2021 Carlos Une"
+copyright = "2021 avpkg contributors"
 
 [build]
 link = ["json-c"]

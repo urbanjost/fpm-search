@@ -19,6 +19,7 @@ apt-get install libjson-c-dev libpcre3-dev libcurl4-openssl-dev
 yum install json-c-devel libcurl-devel pcre-devel
 ```
 
+## Build
 ```bash
 git clone https://github.com/brocolis/avpkg
 cd avpkg
