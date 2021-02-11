@@ -207,7 +207,7 @@ subroutine table_info(tbl, pattern)
 end subroutine
 
 subroutine callback(pkg, fortran_ptr) bind(c)
-    type(fpm_package_t), intent(in), value :: pkg
+    type(fpm_package_t), intent(in) :: pkg
     type(c_ptr), intent(in), value :: fortran_ptr
     type(fhash_tbl_t), pointer :: tbl
     type(package_t) :: pkg_f
