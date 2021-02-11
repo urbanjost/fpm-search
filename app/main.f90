@@ -28,7 +28,7 @@ type(fhash_tbl_t), target :: tbl
 
 ! Command line arguments
 integer :: arg_count
-character(len=64) :: arg, search_term, info_term
+character(len=64) :: arg, search_term, info_term, add_term, add_term_tag
 
 registry_file   = get_registry_file()
 registry_file_c = to_c_string(registry_file)
@@ -53,20 +53,32 @@ cproc = c_funloc(callback)
 i = parse_json(registry_file_c, cproc, c_loc(tbl))
 
 arg_count = command_argument_count()
-if (arg_count .ne. 2) then
-call usage()
-return
-end if
+if (arg_count .eq. 2) then
+    call get_command_argument(1, arg)
 
-arg = ''
-call get_command_argument(1, arg)
+    if (arg .eq. 'search') then
+        call get_command_argument(2, search_term)
+        call table_search(tbl, trim(search_term))
+    else if (arg .eq. 'info') then
+        call get_command_argument(2, info_term)
+        call table_info(tbl, trim(info_term))
+    else if (arg .eq. 'add') then
+        call get_command_argument(2, add_term)
+        call table_add(tbl, trim(add_term))
+    else
+        call usage()
+    end if
 
-if (arg .eq. 'search') then
-    call get_command_argument(2, search_term)
-    call table_search(tbl, trim(search_term))
-else if (arg .eq. 'info') then
-    call get_command_argument(2, info_term)
-    call table_info(tbl, trim(info_term))
+else if (arg_count .eq. 3) then
+    call get_command_argument(1, arg)
+    call get_command_argument(2, add_term)
+    call get_command_argument(3, add_term_tag)
+
+    if (arg .eq. 'add') then
+        call table_add(tbl, trim(add_term), trim(add_term_tag))
+    else
+        call usage()
+    end if
 else
     call usage()
 end if
@@ -111,11 +123,15 @@ function get_registry_file() result(r)
 end function
 
 subroutine usage()
-    print 100, 'Usage: avpkg <search|info> <package>'
+    print 100, 'Usage: avpkg search package'
+    print 100, 'Usage: avpkg info package'
+    print 100, 'Usage: avpkg add package [tag]'
     print *
     print 100, 'Example: avpkg search molecular'
     print 100, 'Example: avpkg search "thermodynamics|mechanics"'
     print 100, 'Example: avpkg info weather'
+    print 100, 'Example: avpkg add M_color'
+    print 100, 'Example: avpkg add datetime v1.7.0'
     100 format(a)
 end subroutine
 
@@ -149,11 +165,11 @@ subroutine table_search(tbl, pattern)
     type(package_t) :: pkg
     logical :: r, r1, r2
     integer :: i
-    integer :: num_buckets, num_items, num_collisions, max_depth
+    integer :: num_buckets, num_items
     type(c_ptr) :: re
 
     re = regex(pattern, ior(PCRE_CASELESS, PCRE_NO_AUTO_CAPTURE))
-    call tbl%stats(num_buckets, num_items, num_collisions, max_depth)
+    call tbl%stats(num_buckets, num_items)
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
@@ -177,11 +193,11 @@ subroutine table_info(tbl, pattern)
     type(package_t) :: pkg
     logical :: r, r1, r2
     integer :: i
-    integer :: num_buckets, num_items, num_collisions, max_depth
+    integer :: num_buckets, num_items
     type(c_ptr) :: re
 
     re = regex(pattern, ior(PCRE_CASELESS, PCRE_NO_AUTO_CAPTURE))
-    call tbl%stats(num_buckets, num_items, num_collisions, max_depth)
+    call tbl%stats(num_buckets, num_items)
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
@@ -204,6 +220,38 @@ subroutine table_info(tbl, pattern)
     end do
 
     call pcre_free(re)
+end subroutine
+
+subroutine table_add(tbl, name, tag)
+    type(fhash_tbl_t), intent(in), pointer :: tbl
+    character(len=*), intent(in) :: name
+    character(len=*), intent(in), optional :: tag
+    type(package_t) :: pkg
+    logical :: r
+    integer :: i
+    integer :: num_buckets, num_items
+
+    call tbl%stats(num_buckets, num_items)
+
+    do i = 1, num_items
+        call table_get_package(tbl, fhash_key(i), pkg, r)
+
+        if (name .eq. pkg%name) then
+            if (present(tag)) then
+                if (tag .eq. pkg%git_tag) then
+                    print 100, pkg%name, pkg%git, pkg%git_tag
+                    return
+                end if
+            else
+                print 200, pkg%name, pkg%git
+                return
+            end if
+        end if
+
+        100 format(a, ' = { git = "', a, '", tag="', a, '" }')
+        200 format(a, ' = { git = "', a, '" }')
+    end do
+
 end subroutine
 
 subroutine callback(pkg, fortran_ptr) bind(c)

@@ -38,4 +38,5 @@ avpkg search lapack
 avpkg search "thermodynamics|mechanics"
 avpkg info datetime
 avpkg search numeric
+avpkg add package [tag]
 ```
