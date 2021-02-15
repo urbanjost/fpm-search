@@ -8,7 +8,10 @@ use c_util, only: to_c_string, to_fortran_string
 use os, only: remove, now, fileTime
 use fhash, only: fhash_tbl_t, fhash_key, fhash_key_t
 use json, only: parse_json
+use M_CLI2, only : set_args, lget, arg=>unnamed
 implicit none
+character(len=:),allocatable :: help_text(:), version_text(:)
+integer :: loop
 
 ! Remote registry file
 character(len=*), parameter :: registry_url =&
@@ -28,7 +31,6 @@ type(fhash_tbl_t), target :: tbl
 
 ! Command line arguments
 integer :: arg_count
-character(len=64) :: arg, search_term, info_term, add_term, add_term_tag
 
 registry_file   = get_registry_file()
 registry_file_c = to_c_string(registry_file)
@@ -52,36 +54,35 @@ end if
 cproc = c_funloc(callback)
 i = parse_json(registry_file_c, cproc, c_loc(tbl))
 
-arg_count = command_argument_count()
-if (arg_count .eq. 2) then
-    call get_command_argument(1, arg)
+call usage()
+call set_args(' --toml F',help_text,version_text)
+arg_count = size(arg)
+if(arg_count.eq.0)then
+   arg=['.']
+   arg_count=1
+endif
 
-    if (arg .eq. 'search') then
-        call get_command_argument(2, search_term)
-        call table_search(tbl, trim(search_term))
-    else if (arg .eq. 'info') then
-        call get_command_argument(2, info_term)
-        call table_info(tbl, trim(info_term))
-    else if (arg .eq. 'add') then
-        call get_command_argument(2, add_term)
-        call table_add(tbl, trim(add_term))
+    if(lget('toml'))then
+        select case(arg_count)
+        case(1)
+           call table_add(tbl, trim(arg(1)))
+        case(2)
+           call table_add(tbl, trim(arg(1)), trim(arg(2)))
+        case default
+           write(*,*)'wrong number of arguments for "--toml" mode'
+           write(*,'(a)')help_text
+        end select
     else
-        call usage()
-    end if
-
-else if (arg_count .eq. 3) then
-    call get_command_argument(1, arg)
-    call get_command_argument(2, add_term)
-    call get_command_argument(3, add_term_tag)
-
-    if (arg .eq. 'add') then
-        call table_add(tbl, trim(add_term), trim(add_term_tag))
-    else
-        call usage()
-    end if
-else
-    call usage()
-end if
+        if(lget('verbose'))then
+           do loop=1,arg_count
+              call table_info(tbl, trim(arg(loop)))
+           enddo
+        else
+           do loop=1,arg_count
+              call table_search(tbl, trim(arg(loop)))
+           enddo
+        endif
+    endif
 
 contains
 
@@ -105,7 +106,7 @@ end function
 !
 ! get_registry_file()
 ! Resolves '%TEMP%/index.json'
-! 
+!
 function get_registry_file() result(r)
     character(len=255) :: tempdir
     character(len=:), allocatable :: r
@@ -123,16 +124,68 @@ function get_registry_file() result(r)
 end function
 
 subroutine usage()
-    print 100, 'Usage: avpkg search package'
-    print 100, 'Usage: avpkg info package'
-    print 100, 'Usage: avpkg add package [tag]'
-    print *
-    print 100, 'Example: avpkg search molecular'
-    print 100, 'Example: avpkg search "thermodynamics|mechanics"'
-    print 100, 'Example: avpkg info weather'
-    print 100, 'Example: avpkg add M_color'
-    print 100, 'Example: avpkg add datetime v1.7.0'
-    100 format(a)
+
+version_text=[character(len=80) :: &
+& 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
+& 'PROGRAM:         avpkg(1)                                            ', &
+& 'VERSION:         0.4.0                                               ', &
+& 'DESCRIPTION:     display available FPM packages                      ', &
+& 'AUTHOR:          brocolis@eml.cc                                     ', &
+& 'LICENSE:         ISC License                                         ', &
+& 'COPYRIGHT:       2021 avpkg contributors                             ', &
+& 'HOME PAGE:       https://github.com/brocolis/avpkg                   ', &
+& '']
+
+help_text=[character(len=80) :: &
+! '12345678901234567890123456789012345678901234567890123456789012345678901234567890', &
+& 'NAME                                                                            ', &
+& '   avpkg(1) - display available FPM packages                                    ', &
+& 'SYNOPSIS                                                                        ', &
+& '   syntax:                                                                      ', &
+& '                                                                                ', &
+& '    avpkg SEARCH_STRING(s) [--verbose]                                          ', &
+& '     or                                                                         ', &
+& '    avpgk --toml PACKAGE_NAME [TAG]                                             ', &
+& 'DESCRIPTION                                                                     ', &
+& '   Search for and display information describing fpm (Fortran Package Manager)  ', &
+& '   packages registered in the fpm repository at                                 ', &
+& '                                                                                ', &
+& '      https://github.com/fortran-lang/fpm-registry                              ', &
+& 'OPTIONS                                                                         ', &
+& ' SEARCH MODE:                                                                   ', &
+& '    SEARCH_STRING  string to perform a case-insensitive search for in the       ', &
+& '                   package descriptions. The default is ".", causing all        ', &
+& '                   registered packages to be displayed.                         ', &
+& '    --verbose,-V   give detailed information about packages located.            ', &
+& '                                                                                ', &
+& ' TOML ENTRY MODE:                                                               ', &
+& '    --toml,-T      instead of an fpm project description give the line needed   ', &
+& '                   to be added to the "fpm.toml" file in order to use the       ', &
+& '                   specified external package in your fpm project.              ', &
+& '    PACKAGE_NAME   when the --toml switch a string is required and is NOT       ', &
+& '                   treated as a Regular Expression but as a specific            ', &
+& '                   case-sensitive fpm package name.                             ', &
+& '    TAG            A git(1) tag name can optionally follow the PACKAGE_NAME     ', &
+& '                   when using the --toml switch.                                ', &
+& '                                                                                ', &
+& ' DOCUMENTATION:                                                                 ', &
+& '    --help,-h      display this help and exit                                   ', &
+& '    --version,-v   output version information and exit                          ', &
+& '                                                                                ', &
+& 'EXAMPLE                                                                         ', &
+& ' Sample commands:                                                               ', &
+& '                                                                                ', &
+& '  avpkg molecular                                                               ', &
+& '  avpkg "thermodynamics|mechanics" # look for either string                     ', &
+& '  avpkg weather --verbose                                                       ', &
+& '  avpkg "date|time"                                                             ', &
+& '                                                                                ', &
+& '  avpkg M_color --toml                                                          ', &
+& '  avpkg --toml datetime v1.7.0                                                  ', &
+& '                                                                                ', &
+& '  avpkg     # list all package descriptions                                     ', &
+& '  avpkg -V  # describe all packages in detail                                   ', &
+& '']
 end subroutine
 
 subroutine table_get_package(tbl, k, v, r)

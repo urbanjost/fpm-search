@@ -12,6 +12,7 @@ link = ["json-c"]
 fortran-curl = {git = "https://github.com/interkosmos/fortran-curl" }
 fortran-pcre = {git = "https://github.com/brocolis/fortran-pcre"}
 fhash        = {git = "https://github.com/LKedward/fhash"}
+M_CLI2       = {git = "https://github.com/urbanjost/M_CLI2" }
 
 [library]
 source-dir="src"
