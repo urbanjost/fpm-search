@@ -175,16 +175,16 @@ help_text=[character(len=80) :: &
 & 'EXAMPLE                                                                         ', &
 & ' Sample commands:                                                               ', &
 & '                                                                                ', &
-& '  Example: avpkg molecular                                                      ', &
-& '  Example: avpkg "thermodynamics|mechanics" # look for either string            ', &
-& '  Example: avpkg weather --verbose                                              ', &
-& '  Example: avpkg "date|time"                                                    ', &
+& '  avpkg molecular                                                               ', &
+& '  avpkg "thermodynamics|mechanics" # look for either string                     ', &
+& '  avpkg weather --verbose                                                       ', &
+& '  avpkg "date|time"                                                             ', &
 & '                                                                                ', &
-& '  Example: avpkg M_color --toml                                                 ', &
-& '  Example: avpkg --toml datetime v1.7.0                                         ', &
+& '  avpkg M_color --toml                                                          ', &
+& '  avpkg --toml datetime v1.7.0                                                  ', &
 & '                                                                                ', &
-& '  Example: avpkg     # list all package descriptions                            ', &
-& '  Example: avpkg -V  # describe all packages in detail                          ', &
+& '  avpkg     # list all package descriptions                                     ', &
+& '  avpkg -V  # describe all packages in detail                                   ', &
 & '']
 end subroutine
 
