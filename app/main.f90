@@ -128,7 +128,7 @@ subroutine usage()
 version_text=[character(len=80) :: &
 & 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
 & 'PROGRAM:         avpkg(1)                                            ', &
-& 'VERSION:         0.4.0                                               ', &
+& 'VERSION:         0.6.0                                               ', &
 & 'DESCRIPTION:     display available FPM packages                      ', &
 & 'AUTHOR:          brocolis@eml.cc                                     ', &
 & 'LICENSE:         ISC License                                         ', &
