@@ -127,25 +127,25 @@ subroutine usage()
 
 version_text=[character(len=80) :: &
 & 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
-& 'PROGRAM:         avpkg(1)                                            ', &
-& 'VERSION:         0.6.0                                               ', &
+& 'PROGRAM:         fpm-search(1)                                       ', &
+& 'VERSION:         0.7.0                                               ', &
 & 'DESCRIPTION:     display available FPM packages                      ', &
 & 'AUTHOR:          brocolis@eml.cc                                     ', &
 & 'LICENSE:         ISC License                                         ', &
-& 'COPYRIGHT:       2021 avpkg contributors                             ', &
-& 'HOME PAGE:       https://github.com/brocolis/avpkg                   ', &
+& 'COPYRIGHT:       2021 fpm-search contributors                        ', &
+& 'HOME PAGE:       https://github.com/brocolis/fpm-search              ', &
 & '']
 
 help_text=[character(len=80) :: &
 ! '12345678901234567890123456789012345678901234567890123456789012345678901234567890', &
 & 'NAME                                                                            ', &
-& '   avpkg(1) - display available FPM packages                                    ', &
+& '   fpm-search(1) - display available FPM packages                               ', &
 & 'SYNOPSIS                                                                        ', &
 & '   syntax:                                                                      ', &
 & '                                                                                ', &
-& '    avpkg SEARCH_STRING(s) [--verbose]                                          ', &
+& '    fpm-search SEARCH_STRING(s) [--verbose]                                     ', &
 & '     or                                                                         ', &
-& '    avpgk --toml PACKAGE_NAME [TAG]                                             ', &
+& '    fpm-search --toml PACKAGE_NAME [TAG]                                        ', &
 & 'DESCRIPTION                                                                     ', &
 & '   Search for and display information describing fpm (Fortran Package Manager)  ', &
 & '   packages registered in the fpm repository at                                 ', &
@@ -175,16 +175,16 @@ help_text=[character(len=80) :: &
 & 'EXAMPLE                                                                         ', &
 & ' Sample commands:                                                               ', &
 & '                                                                                ', &
-& '  avpkg molecular                                                               ', &
-& '  avpkg "thermodynamics|mechanics" # look for either string                     ', &
-& '  avpkg weather --verbose                                                       ', &
-& '  avpkg "date|time"                                                             ', &
+& '  fpm-search molecular                                                          ', &
+& '  fpm-search "thermodynamics|mechanics" # look for either string                ', &
+& '  fpm-search weather --verbose                                                  ', &
+& '  fpm-search "date|time"                                                        ', &
 & '                                                                                ', &
-& '  avpkg M_color --toml                                                          ', &
-& '  avpkg --toml datetime v1.7.0                                                  ', &
+& '  fpm-search M_color --toml                                                     ', &
+& '  fpm-search --toml datetime v1.7.0                                             ', &
 & '                                                                                ', &
-& '  avpkg     # list all package descriptions                                     ', &
-& '  avpkg -V  # describe all packages in detail                                   ', &
+& '  fpm-search     # list all package descriptions                                ', &
+& '  fpm-search -V  # describe all packages in detail                              ', &
 & '']
 end subroutine
 

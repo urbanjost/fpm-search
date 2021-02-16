@@ -1,9 +1,9 @@
-name = "avpkg"
-version = "0.6.0"
+name = "fpm-search"
+version = "0.7.0"
 license = "ISC"
-author = "avpkg contributors"
+author = "fpm-search contributors"
 maintainer = "brocolis@eml.cc"
-copyright = "2021 avpkg contributors"
+copyright = "2021 fpm-search contributors"
 
 [build]
 link = ["json-c"]
@@ -18,6 +18,6 @@ M_CLI2       = {git = "https://github.com/urbanjost/M_CLI2" }
 source-dir="src"
 
 [[executable]]
-name="avpkg"
+name="fpm-search"
 source-dir="app"
 main="main.f90"

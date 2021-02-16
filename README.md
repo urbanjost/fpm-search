@@ -1,4 +1,4 @@
-# avpkg
+# fpm-search
 Available Packages
 
 List available packages in the fpm-registry.
@@ -22,8 +22,8 @@ yum install json-c-devel libcurl-devel pcre-devel
 
 ## Build
 ```
-git clone https://github.com/brocolis/avpkg
-cd avpkg
+git clone https://github.com/brocolis/fpm-search
+cd fpm-search
 fpm build
 fpm install
 ```
@@ -31,13 +31,13 @@ fpm install
 ## Usage
 ```
 NAME
-   avpkg(1) - display available FPM packages
+   fpm-search(1) - display available FPM packages
 SYNOPSIS
    syntax:
 
-    avpkg SEARCH_STRING(s) [--verbose]
+    fpm-search SEARCH_STRING(s) [--verbose]
      or
-    avpgk --toml PACKAGE_NAME [TAG]
+    fpm-search --toml PACKAGE_NAME [TAG]
 DESCRIPTION
    Search for and display information describing fpm (Fortran Package Manager)
    packages registered in the fpm repository at
@@ -67,14 +67,14 @@ OPTIONS
 
 ## Examples
 ```bash
-avpkg molecular
-avpkg "thermodynamics|mechanics" # look for either string
-avpkg weather --verbose
-avpkg "date|time"
+fpm-search molecular
+fpm-search "thermodynamics|mechanics" # look for either string
+fpm-search weather --verbose
+fpm-search "date|time"
 
-avpkg M_color --toml
-avpkg --toml datetime v1.7.0
+fpm-search M_color --toml
+fpm-search --toml datetime v1.7.0
 
-avpkg     # list all package descriptions
-avpkg -V  # describe all packages in detail
+fpm-search     # list all package descriptions
+fpm-search -V  # describe all packages in detail
 ```
