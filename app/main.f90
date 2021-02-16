@@ -55,7 +55,7 @@ cproc = c_funloc(callback)
 i = parse_json(registry_file_c, cproc, c_loc(tbl))
 
 call usage()
-call set_args(' --toml F',help_text,version_text)
+call set_args(' --toml:T F',help_text,version_text)
 arg_count = size(arg)
 if(arg_count.eq.0)then
    arg=['.']
@@ -153,17 +153,18 @@ help_text=[character(len=80) :: &
 & '      https://github.com/fortran-lang/fpm-registry                              ', &
 & 'OPTIONS                                                                         ', &
 & ' SEARCH MODE:                                                                   ', &
-& '    SEARCH_STRING  string to perform a case-insensitive search for in the       ', &
-& '                   package descriptions. The default is ".", causing all        ', &
+& '    SEARCH_STRING  A regular expression used to match package descriptions.     ', &
+& '                   It is case-insensitive. The default is ".", causing all      ', &
 & '                   registered packages to be displayed.                         ', &
-& '    --verbose,-V   give detailed information about packages located.            ', &
+& '    --verbose,-V   give more-detailed information about the packages matching   ', &
+& '                   SEARCH_STRING.                                               ', &
 & '                                                                                ', &
 & ' TOML ENTRY MODE:                                                               ', &
-& '    --toml,-T      instead of an fpm project description give the line needed   ', &
-& '                   to be added to the "fpm.toml" file in order to use the       ', &
-& '                   specified external package in your fpm project.              ', &
-& '    PACKAGE_NAME   when the --toml switch a string is required and is NOT       ', &
-& '                   treated as a Regular Expression but as a specific            ', &
+& '    --toml,-T      instead of an fpm project description generate the line      ', &
+& '                   needed to be added to the "fpm.toml" file in order to use    ', &
+& '                   the specified external package in your fpm project.          ', &
+& '    PACKAGE_NAME   when the --toml switch is supplied a string is required that ', &
+& '                   in NOT treated as a Regular Expression but as a specific     ', &
 & '                   case-sensitive fpm package name.                             ', &
 & '    TAG            A git(1) tag name can optionally follow the PACKAGE_NAME     ', &
 & '                   when using the --toml switch.                                ', &
