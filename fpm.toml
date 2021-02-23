@@ -1,5 +1,5 @@
 name = "fpm-search"
-version = "0.7.0"
+version = "0.8.0"
 license = "ISC"
 author = "fpm-search contributors"
 maintainer = "brocolis@eml.cc"
@@ -13,6 +13,7 @@ fortran-curl = {git = "https://github.com/interkosmos/fortran-curl" }
 fortran-pcre = {git = "https://github.com/brocolis/fortran-pcre"}
 fhash        = {git = "https://github.com/LKedward/fhash"}
 M_CLI2       = {git = "https://github.com/urbanjost/M_CLI2" }
+M_strings    = {git = "https://github.com/urbanjost/M_strings" }
 
 [library]
 source-dir="src"
