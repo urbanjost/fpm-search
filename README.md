@@ -8,6 +8,8 @@ List available packages in the fpm-registry.
 - fortran-pcre
 - fhash
 - M_CLI2
+- M_strings
+- stdlib
 
 ## C dependencies
 - libjson-c
@@ -35,7 +37,7 @@ NAME
 SYNOPSIS
    syntax:
 
-    fpm-search SEARCH_STRING(s) [--verbose]
+    fpm-search SEARCH_STRING(s) [--verbose] [--registry URI] [--force-download]
      or
     fpm-search --toml PACKAGE_NAME [TAG]
 DESCRIPTION
@@ -77,4 +79,7 @@ fpm-search --toml datetime v1.7.0
 
 fpm-search     # list all package descriptions
 fpm-search -V  # describe all packages in detail
+
+fpm-search string --registry https://my-fpm-registry/index.json
+fpm-search string --force-download
 ```

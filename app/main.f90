@@ -8,8 +8,11 @@ use c_util, only: to_c_string, to_fortran_string, to_fortran_array
 use os, only: remove, now, fileTime
 use fhash, only: fhash_tbl_t, fhash_key, fhash_key_t
 use json, only: parse_json
-use M_CLI2, only : set_args, lget, arg=>unnamed
+use M_CLI2, only : set_args, lget, arg=>unnamed, get_args
 use M_strings, only: join
+use stdlib_ascii, only: is_alphanum
+use stdlib_error, only: check
+
 implicit none
 character(len=:),allocatable :: help_text(:), version_text(:)
 integer :: loop
@@ -17,6 +20,9 @@ integer :: loop
 ! Remote registry file
 character(len=*), parameter :: registry_url =&
     'https://github.com/fortran-lang/fpm-registry/raw/master/index.json'
+
+character(len=:), allocatable :: alternate_registry_url
+character(len=:), allocatable :: remote_registry_url
 
 ! Local registry file: '%TEMP%/index.json'
 character(len=:), allocatable :: registry_file
@@ -29,27 +35,39 @@ integer(kind=c_int) :: i
 logical :: download_ok
 type(c_funptr) :: cproc
 type(fhash_tbl_t), target :: tbl
-
-! Command line arguments
 integer :: arg_count
 
-registry_file   = get_registry_file()
+call usage()
+call set_args(' --toml:T F --registry "null" --force-download:F F', help_text, version_text)
+arg_count = size(arg)
+
+if (arg_count .eq. 0) then
+   arg = ['.']
+   arg_count = 1
+end if
+
+call get_args("registry", alternate_registry_url)
+
+if (alternate_registry_url .eq. "null") then
+    registry_file = get_registry_file(registry_url)
+    remote_registry_url = registry_url
+else
+    registry_file = get_registry_file(alternate_registry_url)
+    remote_registry_url = alternate_registry_url
+end if
+
 registry_file_c = to_c_string(registry_file)
 
 !
 ! Download index.json from the internet only if
 ! the local copy is older than time_to_live seconds
 !
-if (abs(now() - fileTime(registry_file_c)) .gt. time_to_live) then
-    !print *, 'Downloading registry ...'
+if (lget('force-download') .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
+    print *, 'Downloading registry ... ', remote_registry_url
 
     i = remove(registry_file_c)
-    download_ok = download(registry_url, registry_file_c)
-
-    if (.not. download_ok) then
-        print *, 'Registry download failed.'
-        stop
-    end if
+    download_ok = download(remote_registry_url, registry_file_c)
+    call check(download_ok .eqv. .true., 'Registry download failed')
 end if
 
 cproc = c_funloc(callback)
@@ -60,35 +78,27 @@ if (i .ne. 0) then
     stop
 end if
 
-call usage()
-call set_args(' --toml:T F',help_text,version_text)
-arg_count = size(arg)
-if(arg_count.eq.0)then
-   arg=['.']
-   arg_count=1
-endif
-
-    if(lget('toml'))then
-        select case(arg_count)
-        case(1)
-           call table_add(tbl, trim(arg(1)))
-        case(2)
-           call table_add(tbl, trim(arg(1)), trim(arg(2)))
-        case default
-           write(*,*)'wrong number of arguments for "--toml" mode'
-           write(*,'(a)')help_text
-        end select
+if (lget('toml')) then
+    select case(arg_count)
+    case(1)
+       call table_add(tbl, trim(arg(1)))
+    case(2)
+       call table_add(tbl, trim(arg(1)), trim(arg(2)))
+    case default
+       write(*,*)'wrong number of arguments for "--toml" mode'
+       write(*,'(a)')help_text
+    end select
+else
+    if (lget('verbose')) then
+        do loop=1, arg_count
+            call table_info(tbl, trim(arg(loop)))
+        end do
     else
-        if(lget('verbose'))then
-           do loop=1,arg_count
-              call table_info(tbl, trim(arg(loop)))
-           enddo
-        else
-           do loop=1,arg_count
-              call table_search(tbl, trim(arg(loop)))
-           enddo
-        endif
-    endif
+        do loop=1, arg_count
+            call table_search(tbl, trim(arg(loop)))
+        end do
+    end if
+end if
 
 contains
 
@@ -110,16 +120,37 @@ logical function is_windows() result(r)
 end function
 
 !
-! get_registry_file()
-! Resolves '%TEMP%/index.json'
+! to_alpha_numeric(url)
+! input:  "https://domain/path/%11/j.php?.json"
+! output: "https___domain_path__11_j_php__json"
 !
-function get_registry_file() result(r)
+function to_alpha_numeric(url) result(r)
+    character(len=*), intent(in) :: url
+    character(len=len(url)) :: r
+    integer :: i
+
+    do i = 1, len(url)
+        if (is_alphanum(url(i:i))) then
+            r(i:i) = url(i:i)
+        else
+            r(i:i) = '_'
+        end if
+    end do
+end function
+
+!
+! get_registry_file(url)
+! Resolves '%TEMP%/alpha_numeric(url)'
+!
+function get_registry_file(url) result(r)
+    character(len=*), intent(in) :: url
     character(len=255) :: tempdir
     character(len=:), allocatable :: r
     integer :: length
     integer :: vstatus
-    character(len=*), parameter :: f = "index.json"
+    character(len=:), allocatable :: f
 
+    f = to_alpha_numeric(url)
     call get_environment_variable("TEMP", tempdir, length, vstatus)
 
     if (vstatus .eq. 0 .and. is_windows()) then
@@ -134,7 +165,7 @@ subroutine usage()
 version_text=[character(len=80) :: &
 & 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
 & 'PROGRAM:         fpm-search(1)                                       ', &
-& 'VERSION:         0.7.0                                               ', &
+& 'VERSION:         0.8.0                                               ', &
 & 'DESCRIPTION:     display available FPM packages                      ', &
 & 'AUTHOR:          brocolis@eml.cc                                     ', &
 & 'LICENSE:         ISC License                                         ', &
@@ -149,7 +180,7 @@ help_text=[character(len=80) :: &
 & 'SYNOPSIS                                                                        ', &
 & '   syntax:                                                                      ', &
 & '                                                                                ', &
-& '    fpm-search SEARCH_STRING(s) [--verbose]                                     ', &
+& '    fpm-search SEARCH_STRING(s) [--verbose] [--registry URI] [--force-download] ', &
 & '     or                                                                         ', &
 & '    fpm-search --toml PACKAGE_NAME [TAG]                                        ', &
 & 'DESCRIPTION                                                                     ', &
@@ -252,7 +283,7 @@ subroutine table_info(tbl, pattern)
     character(len=*), intent(in) :: pattern
     type(package_t) :: pkg
     logical :: r, r1, r2
-    integer :: i, n
+    integer :: i
     integer :: num_buckets, num_items
     type(c_ptr) :: re
     character(len=:), allocatable :: s

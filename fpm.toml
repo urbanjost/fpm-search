@@ -14,6 +14,7 @@ fortran-pcre = {git = "https://github.com/brocolis/fortran-pcre"}
 fhash        = {git = "https://github.com/LKedward/fhash"}
 M_CLI2       = {git = "https://github.com/urbanjost/M_CLI2" }
 M_strings    = {git = "https://github.com/urbanjost/M_strings" }
+stdlib       = {git = "https://github.com/LKedward/stdlib-fpm.git" }
 
 [library]
 source-dir="src"
