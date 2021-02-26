@@ -72,11 +72,7 @@ end if
 
 cproc = c_funloc(callback)
 i = parse_json(registry_file_c, cproc, c_loc(tbl))
-
-if (i .ne. 0) then
-    print *, 'parse_json() failed'
-    stop
-end if
+call check(i .eq. 0, 'parse_json() failed')
 
 if (lget('toml')) then
     select case(arg_count)
