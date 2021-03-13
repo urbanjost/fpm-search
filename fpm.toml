@@ -15,6 +15,7 @@ fhash        = {git = "https://github.com/LKedward/fhash"}
 M_CLI2       = {git = "https://github.com/urbanjost/M_CLI2" }
 M_strings    = {git = "https://github.com/urbanjost/M_strings" }
 stdlib       = {git = "https://github.com/LKedward/stdlib-fpm.git" }
+json-fortran = {git = "https://github.com/brocolis/json-fortran" }
 
 [library]
 source-dir="src"
