@@ -1,13 +1,13 @@
 program main
-use, intrinsic :: iso_c_binding, only: c_char, c_int, c_funptr, c_ptr, c_associated, c_funloc, c_loc, c_f_pointer
-use package_types, only: fpm_package_t, package_t
+use, intrinsic :: iso_c_binding, only: c_char, c_int, c_ptr
+use package_types, only: package_t
 use download_helper, only: download
 use fortran_pcre, only: pcre_free, PCRE_CASELESS, PCRE_NO_AUTO_CAPTURE
 use pcre_helper, only: regex, match
 use c_util, only: to_c_string, to_fortran_string, to_fortran_array
 use os, only: remove, now, fileTime
 use fhash, only: fhash_tbl_t, fhash_key, fhash_key_t
-use json, only: parse_json
+use json, only: get_packages
 use M_CLI2, only : set_args, lget, arg=>unnamed, get_args
 use M_strings, only: join
 use stdlib_ascii, only: is_alphanum
@@ -33,8 +33,8 @@ integer, parameter :: time_to_live = 60*60
 
 integer(kind=c_int) :: i
 logical :: download_ok
-type(c_funptr) :: cproc
-type(fhash_tbl_t), target :: tbl
+logical :: r
+type(fhash_tbl_t) :: tbl
 integer :: arg_count
 
 call usage()
@@ -67,12 +67,11 @@ if (lget('force-download') .or. (abs(now() - fileTime(registry_file_c)) .gt. tim
 
     i = remove(registry_file_c)
     download_ok = download(remote_registry_url, registry_file_c)
-    call check(download_ok .eqv. .true., 'Registry download failed')
+    call check(download_ok, 'Registry download failed')
 end if
 
-cproc = c_funloc(callback)
-i = parse_json(registry_file_c, cproc, c_loc(tbl))
-call check(i .eq. 0, 'parse_json() failed')
+call get_packages(registry_file, tbl, r)
+call check(r, 'get_packages() failed')
 
 if (lget('toml')) then
     select case(arg_count)
@@ -161,7 +160,7 @@ subroutine usage()
 version_text=[character(len=80) :: &
 & 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
 & 'PROGRAM:         fpm-search(1)                                       ', &
-& 'VERSION:         0.8.0                                               ', &
+& 'VERSION:         0.9.0                                               ', &
 & 'DESCRIPTION:     display available FPM packages                      ', &
 & 'AUTHOR:          brocolis@eml.cc                                     ', &
 & 'LICENSE:         ISC License                                         ', &
@@ -247,7 +246,7 @@ subroutine table_get_package(tbl, k, v, r)
 end subroutine
 
 subroutine table_search(tbl, pattern)
-    type(fhash_tbl_t), intent(in), pointer :: tbl
+    type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
     type(package_t) :: pkg
     logical :: r, r1, r2
@@ -265,17 +264,17 @@ subroutine table_search(tbl, pattern)
         r2 = match(re, pkg%description)
 
         if (r1 .or. r2) then
-            print 100, pkg%name, pkg%description, pkg%version
+            print 100, pkg%name, pkg%description
         end if
 
-        100 format(a, ' : ', a, ': ', a)
+        100 format(a, ' : ', a)
     end do
 
     call pcre_free(re)
 end subroutine
 
 subroutine table_info(tbl, pattern)
-    type(fhash_tbl_t), intent(in), pointer :: tbl
+    type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
     type(package_t) :: pkg
     logical :: r, r1, r2
@@ -295,8 +294,13 @@ subroutine table_info(tbl, pattern)
         if (r1 .or. r2) then
             print 100, 'name', pkg%name
             print 100, 'description', pkg%description
-            print 100, 'version', pkg%version
             print 100, 'license', pkg%license
+
+            if (pkg%version_count .gt. 0) then
+                s = join(pkg%version, ", ")
+                s = s(1:len(s) - 2)
+                print 100, 'version', s
+            end if
 
             if (pkg%author_count .gt. 0) then
                 s = join(pkg%author, ", ")
@@ -322,13 +326,25 @@ subroutine table_info(tbl, pattern)
                 print 100, 'keywords', s
             end if
 
+            if (pkg%dependencies_count .gt. 0) then
+                s = join(pkg%dependencies, ", ")
+                s = s(1:len(s) - 2)
+                print 100, 'dependencies', s
+            end if
+
+            if (pkg%dev_dependencies_count .gt. 0) then
+                s = join(pkg%dev_dependencies, ", ")
+                s = s(1:len(s) - 2)
+                print 100, 'dev-dependencies', s
+            end if
+
             print 100, 'homepage', pkg%homepage
             print 100, 'copyright', pkg%copyright
             print 100, 'git', pkg%git
             print 100, 'git-tag', pkg%git_tag
             print *
 
-            100 format(a12, ': ', a)
+            100 format(a16, ': ', a)
         end if
     end do
 
@@ -336,7 +352,7 @@ subroutine table_info(tbl, pattern)
 end subroutine
 
 subroutine table_add(tbl, name, tag)
-    type(fhash_tbl_t), intent(in), pointer :: tbl
+    type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: name
     character(len=*), intent(in), optional :: tag
     type(package_t) :: pkg
@@ -365,37 +381,6 @@ subroutine table_add(tbl, name, tag)
         200 format(a, ' = { git = "', a, '" }')
     end do
 
-end subroutine
-
-subroutine callback(pkg, fortran_ptr) bind(c)
-    type(fpm_package_t), intent(in) :: pkg
-    type(c_ptr), intent(in), value :: fortran_ptr
-    type(fhash_tbl_t), pointer :: tbl
-    type(package_t) :: pkg_f
-    integer :: num_buckets, num_items
-
-    call c_f_pointer(fortran_ptr, tbl)
-
-    if (c_associated(pkg%name))        pkg_f%name = to_fortran_string(pkg%name)
-    if (c_associated(pkg%version))     pkg_f%version = to_fortran_string(pkg%version)
-    if (c_associated(pkg%description)) pkg_f%description = to_fortran_string(pkg%description)
-    if (c_associated(pkg%license))     pkg_f%license = to_fortran_string(pkg%license)
-    if (c_associated(pkg%author))      pkg_f%author = to_fortran_array(pkg%author_count, pkg%author)
-    if (c_associated(pkg%maintainer))  pkg_f%maintainer = to_fortran_array(pkg%maintainer_count, pkg%maintainer)
-    if (c_associated(pkg%categories))  pkg_f%categories = to_fortran_array(pkg%categories_count, pkg%categories)
-    if (c_associated(pkg%keywords))    pkg_f%keywords = to_fortran_array(pkg%keywords_count, pkg%keywords)
-    if (c_associated(pkg%homepage))    pkg_f%homepage = to_fortran_string(pkg%homepage)
-    if (c_associated(pkg%copyright))   pkg_f%copyright = to_fortran_string(pkg%copyright)
-    if (c_associated(pkg%git))         pkg_f%git = to_fortran_string(pkg%git)
-    if (c_associated(pkg%git_tag))     pkg_f%git_tag = to_fortran_string(pkg%git_tag)
-
-    pkg_f%author_count     = pkg%author_count
-    pkg_f%maintainer_count = pkg%maintainer_count
-    pkg_f%categories_count = pkg%categories_count
-    pkg_f%keywords_count   = pkg%keywords_count
-
-    call tbl%stats(num_buckets, num_items)
-    call tbl%set(fhash_key(num_items+1), value=pkg_f)
 end subroutine
 
 end program main

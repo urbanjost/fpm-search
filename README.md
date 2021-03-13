@@ -10,16 +10,16 @@ List available packages in the fpm-registry.
 - M_CLI2
 - M_strings
 - stdlib
+- json-fortran
 
 ## C dependencies
-- libjson-c
 - libpcre
 - libcurl
 
 ## Install dependencies
 ```
-apt-get install libjson-c-dev libpcre3-dev libcurl4-openssl-dev
-yum install json-c-devel libcurl-devel pcre-devel
+apt-get install libpcre3-dev libcurl4-openssl-dev
+yum install libcurl-devel pcre-devel
 ```
 
 ## Build
