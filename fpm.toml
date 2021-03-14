@@ -5,15 +5,12 @@ author = "fpm-search contributors"
 maintainer = "brocolis@eml.cc"
 copyright = "2021 fpm-search contributors"
 
-[build]
-link = ["json-c"]
-
 [dependencies]
 fortran-curl = {git = "https://github.com/interkosmos/fortran-curl" }
 fortran-pcre = {git = "https://github.com/brocolis/fortran-pcre"}
 fhash        = {git = "https://github.com/LKedward/fhash"}
 M_CLI2       = {git = "https://github.com/urbanjost/M_CLI2" }
-M_strings    = {git = "https://github.com/urbanjost/M_strings" }
+M_strings    = {git = "https://github.com/urbanjost/M_strings", rev = "cf66763de788bbb9b6aec9d2a10019dec5643eb0" }
 stdlib       = {git = "https://github.com/LKedward/stdlib-fpm.git" }
 json-fortran = {git = "https://github.com/brocolis/json-fortran" }
 
