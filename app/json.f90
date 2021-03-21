@@ -11,15 +11,16 @@ contains
 
 subroutine get_packages(filename, tbl, ret)
     character(len=*), intent(in) :: filename
-    type(fhash_tbl_t), intent(out) :: tbl
+    type(fhash_tbl_t), intent(inout) :: tbl
     logical, intent(out) :: ret
     type(json_core) :: json
     type(json_value), pointer :: f, packages, package, version
     character(kind=json_CK,len=:), allocatable :: str
     integer(kind=IK) :: i, j, latest_id
     integer(kind=IK) :: num_packages
-    type(package_t)  :: pkg
+    type(package_t), allocatable :: pkg(:)
     logical :: found
+    integer :: num_items
 
     ret = .false.
 
@@ -30,41 +31,54 @@ subroutine get_packages(filename, tbl, ret)
     call check(found, 'packages node not found.');
     num_packages = json%count(packages)
 
+    call tbl%stats(num_items=num_items)
+    ! print *, 'get_packages: num_items:', num_items
+
+    allocate(pkg(num_packages))
+
     do i = 1, num_packages
         latest_id = 0
         call json%get_child(packages, i, package)
-        call json%info(package, n_children=pkg%version_count, name=str)
+        call json%info(package, n_children=pkg(i)%version_count, name=str)
 
-        pkg%name = str
-        allocate(pkg%version(pkg%version_count))
+        pkg(i)%author_count = 0
+        pkg(i)%maintainer_count = 0
+        pkg(i)%keywords_count = 0
+        pkg(i)%categories_count = 0
+        pkg(i)%dependencies_count = 0
+        pkg(i)%dev_dependencies_count = 0
+
+        pkg(i)%name = str
+        allocate(pkg(i)%version(pkg(i)%version_count))
 
         ! Collect versions
-        do j = 1, pkg%version_count
+        do j = 1, pkg(i)%version_count
             call json%get_child(package, j, version)
             call json%info(version, name=str)
-            pkg%version(j) = str
+            pkg(i)%version(j) = str
 
             if (str .eq. 'latest') then
                 latest_id = j
-                call fill(json, version, pkg)
+                call fill(json, version, pkg(i))
             end if
 
-            if (j .eq. pkg%version_count .and. latest_id .eq. 0) then
-                call fill(json, version, pkg)
+            if (j .eq. pkg(i)%version_count .and. latest_id .eq. 0) then
+                call fill(json, version, pkg(i))
             end if
         end do
 
-        call tbl%set(fhash_key(i), value=pkg)
+        call tbl%set(fhash_key(num_items + i), value=pkg(i))
 
-        deallocate(pkg%version)
-        if (allocated(pkg%author)) deallocate(pkg%author)
-        if (allocated(pkg%maintainer)) deallocate(pkg%maintainer)
-        if (allocated(pkg%keywords)) deallocate(pkg%keywords)
-        if (allocated(pkg%categories)) deallocate(pkg%categories)
-        if (allocated(pkg%dependencies)) deallocate(pkg%dependencies)
-        if (allocated(pkg%dev_dependencies)) deallocate(pkg%dev_dependencies)
+        deallocate(pkg(i)%version)
+        if (allocated(pkg(i)%author)) deallocate(pkg(i)%author)
+        if (allocated(pkg(i)%maintainer)) deallocate(pkg(i)%maintainer)
+        if (allocated(pkg(i)%keywords)) deallocate(pkg(i)%keywords)
+        if (allocated(pkg(i)%categories)) deallocate(pkg(i)%categories)
+        if (allocated(pkg(i)%dependencies)) deallocate(pkg(i)%dependencies)
+        if (allocated(pkg(i)%dev_dependencies)) deallocate(pkg(i)%dev_dependencies)
     end do
 
+    deallocate(pkg)
     call json%destroy()
     ret = .not. json%failed()
 end subroutine

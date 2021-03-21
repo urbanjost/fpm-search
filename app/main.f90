@@ -12,6 +12,7 @@ use M_CLI2, only : set_args, lget, arg=>unnamed, get_args
 use M_strings, only: join
 use stdlib_ascii, only: is_alphanum
 use stdlib_error, only: check
+use config, only: config_t, registry_t, read_config_file
 
 implicit none
 character(len=:),allocatable :: help_text(:), version_text(:)
@@ -25,17 +26,22 @@ character(len=:), allocatable :: alternate_registry_url
 character(len=:), allocatable :: remote_registry_url
 
 ! Local registry file: '%TEMP%/index.json'
-character(len=:), allocatable :: registry_file
+character(len=:), allocatable :: registry_file, registry_file_home, registry_file_etc
 character(len=:,kind=c_char), allocatable :: registry_file_c
 
 ! Cache index.json for time_to_live seconds
 integer, parameter :: time_to_live = 60*60
+
+character(len=:), allocatable :: config_file_home, config_file_etc
+type(config_t) :: cfg_home, cfg_etc
+logical :: config_ok
 
 integer(kind=c_int) :: i
 logical :: download_ok
 logical :: r
 type(fhash_tbl_t) :: tbl
 integer :: arg_count
+integer :: num_items
 
 call usage()
 call set_args(' --toml:T F --registry "null" --force-download:F F', help_text, version_text)
@@ -72,6 +78,32 @@ end if
 
 call get_packages(registry_file, tbl, r)
 call check(r, 'get_packages() failed')
+! call tbl%stats(num_items=num_items)
+! print *, 'num_items:', num_items
+
+!
+! Download additional registries
+!
+call get_config_file_home(config_file_home, config_ok)
+if (config_ok) then
+    call read_config_file(config_file_home, cfg_home)
+    call download_registries(cfg_home, time_to_live, registry_file_home)
+    call get_packages(registry_file_home, tbl, r)
+    call check(r, 'get_packages() failed')
+end if
+
+call get_config_file_etc(config_file_etc, config_ok)
+if (config_ok) then
+    call read_config_file(config_file_etc, cfg_etc)
+    call download_registries(cfg_etc, time_to_live, registry_file_etc)
+    call get_packages(registry_file_etc, tbl, r)
+    call check(r, 'get_packages() failed')
+end if
+
+! call tbl%stats(num_items=num_items)
+! print *, 'num_items:', num_items
+! call dump_config(cfg_home)
+! call dump_config(cfg_etc)
 
 if (lget('toml')) then
     select case(arg_count)
@@ -97,6 +129,31 @@ end if
 
 contains
 
+subroutine download_registries(cfg, time_to_live, r)
+    type(config_t), intent(in) :: cfg
+    integer, intent(in) :: time_to_live
+    character(len=:), intent(inout), allocatable :: r
+    character(len=:,kind=c_char), allocatable :: registry_file_c
+    integer :: n
+    integer(kind=c_int) :: i
+    logical :: download_ok
+
+    if (.not. allocated(cfg%registry)) return
+
+    do n = 1, size(cfg%registry)
+        r = get_registry_file(cfg%registry(n)%url)
+        registry_file_c = to_c_string(r)
+
+        if (abs(now() - fileTime(registry_file_c)) .gt. time_to_live) then
+            print *, 'Downloading registry ... ', cfg%registry(n)%url
+
+            i = remove(registry_file_c)
+            download_ok = download(cfg%registry(n)%url, registry_file_c)
+            call check(download_ok, 'Registry download failed')
+        end if
+    end do
+end subroutine
+
 !
 ! is_windows()
 ! Returns true if the code is running on Windows operating system
@@ -107,6 +164,7 @@ logical function is_windows() result(r)
     integer :: length
     integer :: vstatus
 
+    r = .false.
     call get_environment_variable("OS", dir, length, vstatus)
 
     if (vstatus .eq. 0 .and. dir .eq. "Windows_NT") then
@@ -154,6 +212,53 @@ function get_registry_file(url) result(r)
         r = "/tmp/" // f
     end if
 end function
+
+!
+! get_config_file_home
+! Return value: '%HOMEPATH%/.fpm-search.conf' on Windows
+!               '$HOME/.fpm-search.conf' on Linux
+!
+subroutine get_config_file_home(r, ok)
+    logical, intent(out) :: ok
+    character(len=255) :: homedir
+    character(len=:), intent(out), allocatable :: r
+    integer :: length
+    integer :: vstatus
+    character(len=*), parameter :: f = '.fpm-search.conf'
+
+    if (is_windows()) then
+        call get_environment_variable("HOMEPATH", homedir, length, vstatus)
+        ok = vstatus .eq. 0
+
+        if (.not. ok) return
+        r = trim(homedir) // "\" // f
+        inquire(file=r, exist=ok)
+    else
+        call get_environment_variable("HOME", homedir, length, vstatus)
+        ok = vstatus .eq. 0
+
+        if (.not. ok) return
+        r = trim(homedir) // "/" // f
+        inquire(file=r, exist=ok)
+    end if
+end subroutine
+
+!
+! get_config_file_etc
+! Return value: Windows: .false.
+!               Linux: .true. if '/etc/fpm-search.conf' exists
+!
+subroutine get_config_file_etc(r, ok)
+    logical, intent(out) :: ok
+    character(len=:), intent(out), allocatable :: r
+
+    if (is_windows()) then
+        ok = .false.
+    else
+        r = '/etc/fpm-search.conf'
+        inquire(file=r, exist=ok)
+    end if
+end subroutine
 
 subroutine usage()
 
