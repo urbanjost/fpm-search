@@ -2,8 +2,7 @@ program main
 use, intrinsic :: iso_c_binding, only: c_char, c_int, c_ptr
 use package_types, only: package_t
 use download_helper, only: download
-use fortran_pcre, only: pcre_free, PCRE_CASELESS, PCRE_NO_AUTO_CAPTURE
-use pcre_helper, only: regex, match
+use M_match, only: regex_pattern, getpat, match, YES, ERR
 use c_util, only: to_c_string, to_fortran_string, to_fortran_array
 use os, only: remove, now, fileTime
 use fhash, only: fhash_tbl_t, fhash_key, fhash_key_t
@@ -42,7 +41,7 @@ call set_args(' --toml:T F --registry "null" --force-download:F F', help_text, v
 arg_count = size(arg)
 
 if (arg_count .eq. 0) then
-   arg = ['.']
+   arg = ['^']
    arg_count = 1
 end if
 
@@ -252,16 +251,19 @@ subroutine table_search(tbl, pattern)
     logical :: r, r1, r2
     integer :: i
     integer :: num_buckets, num_items
-    type(c_ptr) :: re
+    integer :: j
+    type(regex_pattern) :: p
 
-    re = regex(pattern, ior(PCRE_CASELESS, PCRE_NO_AUTO_CAPTURE))
+    j = getpat(pattern, p%pat)
+    call check(j .ne. ERR, 'Illegal pattern for regex.')
+
     call tbl%stats(num_buckets, num_items)
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
 
-        r1 = match(re, pkg%name)
-        r2 = match(re, pkg%description)
+        r1 = match(pkg%name//char(10), p%pat) .eq. YES
+        r2 = match(pkg%description//char(10), p%pat) .eq. YES
 
         if (r1 .or. r2) then
             print 100, pkg%name, pkg%description
@@ -269,8 +271,6 @@ subroutine table_search(tbl, pattern)
 
         100 format(a, ' : ', a)
     end do
-
-    call pcre_free(re)
 end subroutine
 
 subroutine table_info(tbl, pattern)
@@ -280,16 +280,19 @@ subroutine table_info(tbl, pattern)
     logical :: r, r1, r2
     integer :: i
     integer :: num_buckets, num_items
-    type(c_ptr) :: re
     character(len=:), allocatable :: s
+    integer :: j
+    type(regex_pattern) :: p
 
-    re = regex(pattern, ior(PCRE_CASELESS, PCRE_NO_AUTO_CAPTURE))
+    j = getpat(pattern, p%pat)
+    call check(j .ne. ERR, 'Illegal pattern for regex.')
+
     call tbl%stats(num_buckets, num_items)
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
-        r1 = match(re, pkg%name)
-        r2 = match(re, pkg%description)
+        r1 = match(pkg%name//char(10), p%pat) .eq. YES
+        r2 = match(pkg%description//char(10), p%pat) .eq. YES
 
         if (r1 .or. r2) then
             print 100, 'name', pkg%name
@@ -347,8 +350,6 @@ subroutine table_info(tbl, pattern)
             100 format(a16, ': ', a)
         end if
     end do
-
-    call pcre_free(re)
 end subroutine
 
 subroutine table_add(tbl, name, tag)
