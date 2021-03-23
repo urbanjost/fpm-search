@@ -86,7 +86,7 @@ call check(r, 'get_packages() failed')
 call get_config_file_home(config_file_home, config_ok)
 if (config_ok) then
     call read_config_file(config_file_home, cfg_home)
-    call download_registries(cfg_home, time_to_live, registry_file_home)
+    call download_registries(cfg_home, time_to_live, registry_file_home, lget('force-download'))
     call get_packages(registry_file_home, tbl, r)
     call check(r, 'get_packages() failed')
 end if
@@ -94,7 +94,7 @@ end if
 call get_config_file_etc(config_file_etc, config_ok)
 if (config_ok) then
     call read_config_file(config_file_etc, cfg_etc)
-    call download_registries(cfg_etc, time_to_live, registry_file_etc)
+    call download_registries(cfg_etc, time_to_live, registry_file_etc, lget('force-download'))
     call get_packages(registry_file_etc, tbl, r)
     call check(r, 'get_packages() failed')
 end if
@@ -128,10 +128,11 @@ end if
 
 contains
 
-subroutine download_registries(cfg, time_to_live, r)
+subroutine download_registries(cfg, time_to_live, r, force)
     type(config_t), intent(in) :: cfg
     integer, intent(in) :: time_to_live
     character(len=:), intent(inout), allocatable :: r
+    logical, intent(in) :: force
     character(len=:,kind=c_char), allocatable :: registry_file_c
     integer :: n
     integer(kind=c_int) :: i
@@ -143,11 +144,11 @@ subroutine download_registries(cfg, time_to_live, r)
         r = get_registry_file(cfg%registry(n)%url)
         registry_file_c = to_c_string(r)
 
-        if (abs(now() - fileTime(registry_file_c)) .gt. time_to_live) then
+        if (force .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
             print *, 'Downloading registry ... ', cfg%registry(n)%url
 
             i = remove(registry_file_c)
-            download_ok = download(cfg%registry(n)%url, registry_file_c)
+            download_ok = download(cfg%registry(n)%url, r)
             call check(download_ok, 'Registry download failed')
         end if
     end do
@@ -264,7 +265,7 @@ subroutine usage()
 version_text=[character(len=80) :: &
 & 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
 & 'PROGRAM:         fpm-search(1)                                       ', &
-& 'VERSION:         0.11.2                                              ', &
+& 'VERSION:         0.12.0                                              ', &
 & 'DESCRIPTION:     display available FPM packages                      ', &
 & 'AUTHOR:          brocolis@eml.cc                                     ', &
 & 'LICENSE:         ISC License                                         ', &
