@@ -4,22 +4,12 @@ Available Packages
 List available packages in the fpm-registry.
 
 ## Fortran dependencies
-- fortran-curl
 - fhash
 - M_CLI2
 - M_strings
 - stdlib
 - json-fortran
 - M_match
-
-## C dependencies
-- libcurl
-
-## Install dependencies
-```
-apt-get install libcurl4-openssl-dev
-yum install libcurl-devel
-```
 
 ## Build
 ```
@@ -86,5 +76,7 @@ fpm-search string --force-download
 2. Linux: `$HOME/.fpm-search.conf`
 
 ### Format
+```
 label1=https://my-alternate-registry/index.json
 label2=https://other-registry/index.json
+```
