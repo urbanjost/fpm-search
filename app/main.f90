@@ -406,43 +406,36 @@ subroutine table_info(tbl, pattern)
 
             if (pkg%version_count .gt. 0) then
                 s = join(pkg%version, ", ")
-                s = s(1:len(s) - 2)
                 print 100, 'version', s
             end if
 
             if (pkg%author_count .gt. 0) then
                 s = join(pkg%author, ", ")
-                s = s(1:len(s) - 2)
                 print 100, 'author', s
             end if
 
             if (pkg%maintainer_count .gt. 0) then
                 s = join(pkg%maintainer, ", ")
-                s = s(1:len(s) - 2)
                 print 100, 'maintainer', s
             end if
 
             if (pkg%categories_count .gt. 0) then
                 s = join(pkg%categories, ", ")
-                s = s(1:len(s) - 2)
                 print 100, 'categories', s
             end if
 
             if (pkg%keywords_count .gt. 0) then
                 s = join(pkg%keywords, ", ")
-                s = s(1:len(s) - 2)
                 print 100, 'keywords', s
             end if
 
             if (pkg%dependencies_count .gt. 0) then
                 s = join(pkg%dependencies, ", ")
-                s = s(1:len(s) - 2)
                 print 100, 'dependencies', s
             end if
 
             if (pkg%dev_dependencies_count .gt. 0) then
                 s = join(pkg%dev_dependencies, ", ")
-                s = s(1:len(s) - 2)
                 print 100, 'dev-dependencies', s
             end if
 

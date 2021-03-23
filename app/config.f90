@@ -74,7 +74,7 @@ subroutine dump_config(cfg)
     type(config_t), intent(in)  :: cfg
     integer :: u
     integer :: n
-    
+
     if (.not. allocated(cfg%registry)) return
     print *, cfg%filename
 

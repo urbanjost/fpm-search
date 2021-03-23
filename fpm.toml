@@ -1,5 +1,5 @@
 name = "fpm-search"
-version = "0.9.0"
+version = "0.10.0"
 license = "ISC"
 author = "fpm-search contributors"
 maintainer = "brocolis@eml.cc"
@@ -9,7 +9,7 @@ copyright = "2021 fpm-search contributors"
 fortran-curl = {git = "https://github.com/interkosmos/fortran-curl", rev = "45dd924b526e5826ece8c1793c6e5e795ce5892a" }
 fhash        = {git = "https://github.com/LKedward/fhash", rev = "125ac80a3e736c08ba46184150923baca09a6bfd" }
 M_CLI2       = {git = "https://github.com/urbanjost/M_CLI2", rev = "54cd522b7e2a4a1d873580e4a2c56e34549a1182" }
-M_strings    = {git = "https://github.com/urbanjost/M_strings", rev = "cf66763de788bbb9b6aec9d2a10019dec5643eb0" }
+M_strings    = {git = "https://github.com/urbanjost/M_strings"}
 stdlib       = {git = "https://github.com/LKedward/stdlib-fpm.git", rev = "eadc8ad5eaf182adee04f1bd31624ad19b9eaf2c" }
 json-fortran = {git = "https://github.com/brocolis/json-fortran", rev = "0c0d36f0280e81524561b44b3e6467e003a363ef" }
 M_match      = {git = "https://github.com/urbanjost/M_match.git" }
