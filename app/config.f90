@@ -5,6 +5,7 @@ public :: config_t, registry_t, read_config_file
 type registry_t
     character(len=:), allocatable :: label
     character(len=:), allocatable :: url
+    character(len=:), allocatable :: local_file
     logical :: enable
 end type registry_t
 

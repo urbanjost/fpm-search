@@ -12,6 +12,7 @@ use M_strings, only: join
 use stdlib_ascii, only: is_alphanum
 use stdlib_error, only: check
 use config, only: config_t, registry_t, read_config_file
+use M_escape, only : fg_green, bg_default, reset
 
 implicit none
 character(len=:),allocatable :: help_text(:), version_text(:)
@@ -25,7 +26,7 @@ character(len=:), allocatable :: alternate_registry_url
 character(len=:), allocatable :: remote_registry_url
 
 ! Local registry file: '%TEMP%/index.json'
-character(len=:), allocatable :: registry_file, registry_file_home, registry_file_etc
+character(len=:), allocatable :: registry_file
 character(len=:,kind=c_char), allocatable :: registry_file_c
 
 ! Cache index.json for time_to_live seconds
@@ -41,6 +42,7 @@ logical :: r
 type(fhash_tbl_t) :: tbl
 integer :: arg_count
 integer :: num_items
+integer :: n
 
 call usage()
 call set_args(' --toml:T F --registry "null" --force-download:F F', help_text, version_text)
@@ -68,7 +70,7 @@ registry_file_c = to_c_string(registry_file)
 ! the local copy is older than time_to_live seconds
 !
 if (lget('force-download') .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
-    print *, 'Downloading registry ... ', remote_registry_url
+    write(*,'(*(g0))') fg_green, bg_default, 'Downloading registry ... ', reset, remote_registry_url
 
     i = remove(registry_file_c)
     download_ok = download(remote_registry_url, registry_file)
@@ -86,17 +88,21 @@ call check(r, 'get_packages() failed')
 call get_config_file_home(config_file_home, config_ok)
 if (config_ok) then
     call read_config_file(config_file_home, cfg_home)
-    call download_registries(cfg_home, time_to_live, registry_file_home, lget('force-download'))
-    call get_packages(registry_file_home, tbl, r)
-    call check(r, 'get_packages() failed')
+    call download_registries(cfg_home, time_to_live, lget('force-download'))
+    do n = 1, size(cfg_home%registry)
+        call get_packages(cfg_home%registry(n)%local_file, tbl, r)
+        call check(r, 'get_packages() failed')
+    end do
 end if
 
 call get_config_file_etc(config_file_etc, config_ok)
 if (config_ok) then
     call read_config_file(config_file_etc, cfg_etc)
-    call download_registries(cfg_etc, time_to_live, registry_file_etc, lget('force-download'))
-    call get_packages(registry_file_etc, tbl, r)
-    call check(r, 'get_packages() failed')
+    call download_registries(cfg_etc, time_to_live, lget('force-download'))
+    do n = 1, size(cfg_etc%registry)
+        call get_packages(cfg_etc%registry(n)%local_file, tbl, r)
+        call check(r, 'get_packages() failed')
+    end do
 end if
 
 ! call tbl%stats(num_items=num_items)
@@ -128,10 +134,9 @@ end if
 
 contains
 
-subroutine download_registries(cfg, time_to_live, r, force)
-    type(config_t), intent(in) :: cfg
+subroutine download_registries(cfg, time_to_live, force)
+    type(config_t), intent(inout) :: cfg
     integer, intent(in) :: time_to_live
-    character(len=:), intent(inout), allocatable :: r
     logical, intent(in) :: force
     character(len=:,kind=c_char), allocatable :: registry_file_c
     integer :: n
@@ -141,14 +146,14 @@ subroutine download_registries(cfg, time_to_live, r, force)
     if (.not. allocated(cfg%registry)) return
 
     do n = 1, size(cfg%registry)
-        r = get_registry_file(cfg%registry(n)%url)
-        registry_file_c = to_c_string(r)
+        cfg%registry(n)%local_file = get_registry_file(cfg%registry(n)%url)
+        registry_file_c = to_c_string(cfg%registry(n)%local_file)
 
         if (force .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
-            print *, 'Downloading registry ... ', cfg%registry(n)%url
+            write(*,'(*(g0))') fg_green, bg_default, 'Downloading registry ... ', reset, cfg%registry(n)%url
 
             i = remove(registry_file_c)
-            download_ok = download(cfg%registry(n)%url, r)
+            download_ok = download(cfg%registry(n)%url, cfg%registry(n)%local_file)
             call check(download_ok, 'Registry download failed')
         end if
     end do
@@ -442,9 +447,17 @@ subroutine table_info(tbl, pattern)
             print 100, 'copyright', pkg%copyright
             print 100, 'git', pkg%git
             print 100, 'git-tag', pkg%git_tag
+
+            if (pkg%git_tag .ne. 'null') then
+                print 200, 'toml', pkg%name, pkg%git, pkg%git_tag
+            else
+                print 300, 'toml', pkg%name, pkg%git
+            end if
             print *
 
             100 format(a16, ': ', a)
+            200 format(a16, ': ', a, ' = { git = "', a, '", tag="', a, '" }')
+            300 format(a16, ': ', a, ' = { git = "', a, '" }')
         end if
     end do
 end subroutine
