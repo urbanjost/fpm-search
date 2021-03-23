@@ -71,7 +71,7 @@ if (lget('force-download') .or. (abs(now() - fileTime(registry_file_c)) .gt. tim
     print *, 'Downloading registry ... ', remote_registry_url
 
     i = remove(registry_file_c)
-    download_ok = download(remote_registry_url, registry_file_c)
+    download_ok = download(remote_registry_url, registry_file)
     call check(download_ok, 'Registry download failed')
 end if
 
@@ -264,7 +264,7 @@ subroutine usage()
 version_text=[character(len=80) :: &
 & 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
 & 'PROGRAM:         fpm-search(1)                                       ', &
-& 'VERSION:         0.11.1                                              ', &
+& 'VERSION:         0.11.2                                              ', &
 & 'DESCRIPTION:     display available FPM packages                      ', &
 & 'AUTHOR:          brocolis@eml.cc                                     ', &
 & 'LICENSE:         ISC License                                         ', &
