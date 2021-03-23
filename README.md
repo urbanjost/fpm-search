@@ -5,21 +5,20 @@ List available packages in the fpm-registry.
 
 ## Fortran dependencies
 - fortran-curl
-- fortran-pcre
 - fhash
 - M_CLI2
 - M_strings
 - stdlib
 - json-fortran
+- M_match
 
 ## C dependencies
-- libpcre
 - libcurl
 
 ## Install dependencies
 ```
-apt-get install libpcre3-dev libcurl4-openssl-dev
-yum install libcurl-devel pcre-devel
+apt-get install libcurl4-openssl-dev
+yum install libcurl-devel
 ```
 
 ## Build
@@ -47,8 +46,8 @@ DESCRIPTION
       https://github.com/fortran-lang/fpm-registry
 OPTIONS
  SEARCH MODE:
-    SEARCH_STRING  string to perform a case-insensitive search for in the
-                   package descriptions. The default is ".", causing all
+    SEARCH_STRING  string to perform a case-sensitive search for in the
+                   package descriptions. The default is "^", causing all
                    registered packages to be displayed.
     --verbose,-V   give detailed information about packages located.
 
@@ -69,10 +68,8 @@ OPTIONS
 
 ## Examples
 ```bash
-fpm-search molecular
-fpm-search "thermodynamics|mechanics" # look for either string
-fpm-search weather --verbose
-fpm-search "date|time"
+fpm-search hash
+fpm-search pixel -V
 
 fpm-search M_color --toml
 fpm-search --toml datetime v1.7.0
@@ -83,3 +80,11 @@ fpm-search -V  # describe all packages in detail
 fpm-search string --registry https://my-fpm-registry/index.json
 fpm-search string --force-download
 ```
+
+## Configuration file
+1. Windows: `%HOMEPATH%\.fpm-search.conf`
+2. Linux: `$HOME/.fpm-search.conf`
+
+### Format
+label1=https://my-alternate-registry/index.json
+label2=https://other-registry/index.json

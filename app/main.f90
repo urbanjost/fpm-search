@@ -264,7 +264,7 @@ subroutine usage()
 version_text=[character(len=80) :: &
 & 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
 & 'PROGRAM:         fpm-search(1)                                       ', &
-& 'VERSION:         0.9.0                                               ', &
+& 'VERSION:         0.10.0                                              ', &
 & 'DESCRIPTION:     display available FPM packages                      ', &
 & 'AUTHOR:          brocolis@eml.cc                                     ', &
 & 'LICENSE:         ISC License                                         ', &
@@ -290,7 +290,7 @@ help_text=[character(len=80) :: &
 & 'OPTIONS                                                                         ', &
 & ' SEARCH MODE:                                                                   ', &
 & '    SEARCH_STRING  A regular expression used to match package descriptions.     ', &
-& '                   It is case-insensitive. The default is ".", causing all      ', &
+& '                   It is case-sensitive. The default is ".", causing all        ', &
 & '                   registered packages to be displayed.                         ', &
 & '    --verbose,-V   give more-detailed information about the packages matching   ', &
 & '                   SEARCH_STRING.                                               ', &
@@ -312,10 +312,8 @@ help_text=[character(len=80) :: &
 & 'EXAMPLE                                                                         ', &
 & ' Sample commands:                                                               ', &
 & '                                                                                ', &
-& '  fpm-search molecular                                                          ', &
-& '  fpm-search "thermodynamics|mechanics" # look for either string                ', &
-& '  fpm-search weather --verbose                                                  ', &
-& '  fpm-search "date|time"                                                        ', &
+& '  fpm-search hash                                                               ', &
+& '  fpm-search pixel --verbose                                                    ', &
 & '                                                                                ', &
 & '  fpm-search M_color --toml                                                     ', &
 & '  fpm-search --toml datetime v1.7.0                                             ', &
