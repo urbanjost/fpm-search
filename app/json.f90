@@ -157,7 +157,7 @@ subroutine fill_keywords(json, p, pkg)
 
     do i = 1, pkg%keywords_count
         call json%get_child(p, i, q)
-        call json%info(q, name=str)
+        call json%get(q, '@', str)
         pkg%keywords(i) = str
     end do
 
@@ -177,7 +177,7 @@ subroutine fill_categories(json, p, pkg)
 
     do i = 1, pkg%categories_count
         call json%get_child(p, i, q)
-        call json%info(q, name=str)
+        call json%get(q, '@', str)
         pkg%categories(i) = str
     end do
 

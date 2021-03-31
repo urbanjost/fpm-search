@@ -7,7 +7,7 @@ type package_t
     character(len=12), allocatable :: version(:)
     character(len=:),  allocatable :: license
     character(len=64), allocatable :: author(:)
-    character(len=64), allocatable :: maintainer(:)
+    character(len=200), allocatable :: maintainer(:)
     character(len=64), allocatable :: categories(:)
     character(len=64), allocatable :: keywords(:)
     character(len=64), allocatable :: dependencies(:)
