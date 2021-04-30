@@ -12,6 +12,9 @@ use M_strings, only: join
 use stdlib_ascii, only: is_alphanum
 use stdlib_error, only: check
 use config, only: config_t, registry_t, read_config_file
+use dynload_base, only: RTLD_LAZY
+use dynload_pcre, only: load_pcre, unload_pcre
+use dynload_pcre_helper, only: pcre_t, regex, match_pcre=>match, destroy
 
 implicit none
 character(len=:),allocatable :: help_text(:), version_text(:)
@@ -42,9 +45,11 @@ type(fhash_tbl_t) :: tbl
 integer :: arg_count
 integer :: num_items
 integer :: n
+integer :: ier
+logical :: use_pcre
 
 call usage()
-call set_args(' --toml:T F --registry "null" --force-download:F F', help_text, version_text)
+call set_args(' --toml:T F --registry "null" --force-download:F F --use-pcre:P', help_text, version_text)
 arg_count = size(arg)
 
 if (arg_count .eq. 0) then
@@ -109,6 +114,14 @@ end if
 ! call dump_config(cfg_home)
 ! call dump_config(cfg_etc)
 
+if (is_windows()) then
+    call load_pcre("libpcre-1.dll", 0, ier)
+else
+    call load_pcre("libpcre.so", RTLD_LAZY, ier)
+end if
+
+use_pcre = lget('use-pcre') .and. ier .eq. 0
+
 if (lget('toml')) then
     select case(arg_count)
     case(1)
@@ -122,15 +135,18 @@ if (lget('toml')) then
 else
     if (lget('verbose')) then
         do loop=1, arg_count
-            call table_info(tbl, trim(arg(loop)))
+            call table_info(tbl, trim(arg(loop)), use_pcre)
         end do
     else
         do loop=1, arg_count
-            call table_search(tbl, trim(arg(loop)))
+            call table_search(tbl, trim(arg(loop)), use_pcre)
         end do
     end if
 end if
 
+if (ier .eq. 0) then
+    call unload_pcre()
+end if
 contains
 
 subroutine download_registries(cfg, time_to_live, force)
@@ -352,26 +368,37 @@ subroutine table_get_package(tbl, k, v, r)
     end select
 end subroutine
 
-subroutine table_search(tbl, pattern)
+subroutine table_search(tbl, pattern, usepcre)
     type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
+    logical, intent(in) :: usepcre
     type(package_t) :: pkg
     logical :: r, r1, r2
     integer :: i
     integer :: num_buckets, num_items
     integer :: j
     type(regex_pattern) :: p
+    type(pcre_t) :: re
 
-    j = getpat(pattern, p%pat)
-    call check(j .ne. ERR, 'Illegal pattern for regex.')
+    if (usepcre) then
+        re = regex(pattern)
+    else
+        j = getpat(pattern, p%pat)
+        call check(j .ne. ERR, 'Illegal pattern for regex.')
+    end if
 
     call tbl%stats(num_buckets, num_items)
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
 
-        r1 = match(pkg%name//char(10), p%pat) .eq. YES
-        r2 = match(pkg%description//char(10), p%pat) .eq. YES
+        if (usepcre) then
+            r1 = match_pcre(re, pkg%name)
+            r2 = match_pcre(re, pkg%description)
+        else
+            r1 = match(pkg%name//char(10), p%pat) .eq. YES
+            r2 = match(pkg%description//char(10), p%pat) .eq. YES
+        end if
 
         if (r1 .or. r2) then
             print 100, pkg%name, pkg%description
@@ -379,11 +406,16 @@ subroutine table_search(tbl, pattern)
 
         100 format(a, ' : ', a)
     end do
+
+    if (usepcre) then
+        call destroy(re)
+    end if
 end subroutine
 
-subroutine table_info(tbl, pattern)
+subroutine table_info(tbl, pattern, usepcre)
     type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
+    logical, intent(in) :: usepcre
     type(package_t) :: pkg
     logical :: r, r1, r2
     integer :: i
@@ -391,16 +423,27 @@ subroutine table_info(tbl, pattern)
     character(len=:), allocatable :: s
     integer :: j
     type(regex_pattern) :: p
+    type(pcre_t) :: re
 
-    j = getpat(pattern, p%pat)
-    call check(j .ne. ERR, 'Illegal pattern for regex.')
+    if (usepcre) then
+        re = regex(pattern)
+    else
+        j = getpat(pattern, p%pat)
+        call check(j .ne. ERR, 'Illegal pattern for regex.')
+    end if
 
     call tbl%stats(num_buckets, num_items)
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
-        r1 = match(pkg%name//char(10), p%pat) .eq. YES
-        r2 = match(pkg%description//char(10), p%pat) .eq. YES
+
+        if (usepcre) then
+            r1 = match_pcre(re, pkg%name)
+            r2 = match_pcre(re, pkg%description)
+        else
+            r1 = match(pkg%name//char(10), p%pat) .eq. YES
+            r2 = match(pkg%description//char(10), p%pat) .eq. YES
+        end if
 
         if (r1 .or. r2) then
             print 100, 'name', pkg%name
@@ -459,6 +502,10 @@ subroutine table_info(tbl, pattern)
             300 format(a16, ': ', a, ' = { git = "', a, '" }')
         end if
     end do
+
+    if (usepcre) then
+        call destroy(re)
+    end if
 end subroutine
 
 subroutine table_add(tbl, name, tag)
