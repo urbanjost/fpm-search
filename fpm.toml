@@ -12,7 +12,6 @@ M_strings    = {git = "https://github.com/urbanjost/M_strings"}
 stdlib       = {git = "https://github.com/LKedward/stdlib-fpm.git"}
 json-fortran = {git = "https://github.com/brocolis/json-fortran", rev = "0c0d36f0280e81524561b44b3e6467e003a363ef" }
 M_match      = {git = "https://github.com/urbanjost/M_match.git" }
-M_escape     = {git = "https://github.com/urbanjost/M_escape" }
 dynload-pcre = {git = "https://github.com/brocolis/dynload-pcre.git" }
 
 [library]

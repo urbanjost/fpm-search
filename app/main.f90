@@ -12,7 +12,6 @@ use M_strings, only: join
 use stdlib_ascii, only: is_alphanum
 use stdlib_error, only: check
 use config, only: config_t, registry_t, read_config_file
-use M_escape, only : fg_green, bg_default, reset
 
 implicit none
 character(len=:),allocatable :: help_text(:), version_text(:)
@@ -70,7 +69,7 @@ registry_file_c = to_c_string(registry_file)
 ! the local copy is older than time_to_live seconds
 !
 if (lget('force-download') .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
-    write(*,'(*(g0))') fg_green, bg_default, 'Downloading registry ... ', reset, remote_registry_url
+    write(*,'(*(g0))') 'Downloading registry ... ', remote_registry_url
 
     i = remove(registry_file_c)
     download_ok = download(remote_registry_url, registry_file)
@@ -150,7 +149,7 @@ subroutine download_registries(cfg, time_to_live, force)
         registry_file_c = to_c_string(cfg%registry(n)%local_file)
 
         if (force .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
-            write(*,'(*(g0))') fg_green, bg_default, 'Downloading registry ... ', reset, cfg%registry(n)%url
+            write(*,'(*(g0))') 'Downloading registry ... ', cfg%registry(n)%url
 
             i = remove(registry_file_c)
             download_ok = download(cfg%registry(n)%url, cfg%registry(n)%local_file)
