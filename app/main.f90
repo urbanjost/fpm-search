@@ -49,7 +49,7 @@ integer :: ier
 logical :: use_pcre
 
 call usage()
-call set_args(' --toml:T F --registry "null" --force-download:F F --use-pcre:P', help_text, version_text)
+call set_args(' --toml:T F --registry "null" --force-download:F F --regex:R F', help_text, version_text)
 arg_count = size(arg)
 
 if (arg_count .eq. 0) then
@@ -120,7 +120,7 @@ else
     call load_pcre("libpcre.so", RTLD_LAZY, ier)
 end if
 
-use_pcre = lget('use-pcre') .and. ier .eq. 0
+use_pcre = lget('regex') .and. ier .eq. 0
 
 if (lget('toml')) then
     select case(arg_count)
