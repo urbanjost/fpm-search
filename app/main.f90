@@ -15,6 +15,7 @@ use config, only: config_t, registry_t, read_config_file
 use dynload_base, only: RTLD_LAZY
 use dynload_pcre, only: load_pcre, unload_pcre
 use dynload_pcre_helper, only: pcre_t, regex, match_pcre=>match, destroy
+use M_escape, only : fg_green, bg_default, reset, M_escape_initialize
 
 implicit none
 character(len=:),allocatable :: help_text(:), version_text(:)
@@ -48,6 +49,7 @@ integer :: n
 integer :: ier
 logical :: use_pcre
 
+i = M_escape_initialize()
 call usage()
 call set_args(' --toml:T F --registry "null" --force-download:F F --regex:R F', help_text, version_text)
 arg_count = size(arg)
@@ -74,7 +76,7 @@ registry_file_c = to_c_string(registry_file)
 ! the local copy is older than time_to_live seconds
 !
 if (lget('force-download') .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
-    write(*,'(*(g0))') 'Downloading registry ... ', remote_registry_url
+    write(*,'(*(g0))') fg_green, bg_default, 'Downloading registry ... ', reset, remote_registry_url
 
     i = remove(registry_file_c)
     download_ok = download(remote_registry_url, registry_file)
@@ -165,7 +167,7 @@ subroutine download_registries(cfg, time_to_live, force)
         registry_file_c = to_c_string(cfg%registry(n)%local_file)
 
         if (force .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
-            write(*,'(*(g0))') 'Downloading registry ... ', cfg%registry(n)%url
+            write(*,'(*(g0))') fg_green, bg_default, 'Downloading registry ... ', reset, cfg%registry(n)%url
 
             i = remove(registry_file_c)
             download_ok = download(cfg%registry(n)%url, cfg%registry(n)%local_file)
