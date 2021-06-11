@@ -10,6 +10,7 @@ List available packages in the fpm-registry.
 - stdlib
 - json-fortran
 - M_match
+- M_escape
 
 ## Build
 ```
