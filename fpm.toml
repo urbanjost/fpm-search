@@ -13,7 +13,7 @@ stdlib       = {git = "https://github.com/LKedward/stdlib-fpm.git"}
 json-fortran = {git = "https://github.com/jacobwilliams/json-fortran.git"}
 M_match      = {git = "https://github.com/urbanjost/M_match.git" }
 dynload-pcre = {git = "https://github.com/brocolis/dynload-pcre.git" }
-M_escape     = {git = "https://github.com/urbanjost/M_escape.git" }
+M_escape     = {git = "https://github.com/urbanjost/M_escape.git", rev = "a32ece6a8cb355d2560c4478d17d6d51e8a0bba9" }
 
 [library]
 source-dir="src"
