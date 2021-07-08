@@ -1,0 +1,36 @@
+name: fpm
+
+on: [push, pull_request]
+
+jobs:
+  gfortran:
+    runs-on: ubuntu-latest
+
+    env:
+      FC: gfortran
+      GCC_V: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v1
+
+    - name: Install gfortran
+      run: |
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_V} 100 \
+        --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V} \
+        --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_V}
+
+    - name: Install fpm
+      uses: fortran-lang/setup-fpm@v3
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build
+      run: |
+        gfortran --version
+        fpm build
+
+    - name: Search
+      run: |
+        gfortran --version
+        fpm run -- -V
