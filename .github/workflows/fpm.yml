@@ -28,7 +28,7 @@ jobs:
     - name: Build
       run: |
         gfortran --version
-        fpm build
+        fpm build --flag "-fPIC -ldl"
 
     - name: Search
       run: |
