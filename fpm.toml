@@ -22,3 +22,6 @@ source-dir="src"
 name="fpm-search"
 source-dir="app"
 main="main.f90"
+
+[build]
+# link = "dl"
