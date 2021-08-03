@@ -16,9 +16,13 @@ List available packages in the fpm-registry.
 ```
 git clone https://github.com/brocolis/fpm-search
 cd fpm-search
+
+# On linux
+sed -i "s/^# link/link/" fpm.toml
 fpm install
-# On linux, add --flag "-ldl"
-fpm install --flag "-ldl"
+
+# On Windows
+fpm install
 ```
 
 ## Usage
