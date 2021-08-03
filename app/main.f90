@@ -3,7 +3,7 @@ use, intrinsic :: iso_c_binding, only: c_char, c_int, c_ptr
 use package_types, only: package_t
 use download_helper, only: download
 use M_match, only: regex_pattern, getpat, match, YES, ERR
-use c_util, only: to_c_string, to_fortran_string, to_fortran_array
+use c_util, only: to_c_string
 use os, only: remove, now, fileTime
 use fhash, only: fhash_tbl_t, fhash_key, fhash_key_t
 use json, only: get_packages
