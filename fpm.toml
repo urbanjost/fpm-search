@@ -14,6 +14,7 @@ json-fortran = {git = "https://github.com/jacobwilliams/json-fortran.git"}
 M_match      = {git = "https://github.com/urbanjost/M_match.git" }
 dynload-pcre = {git = "https://github.com/brocolis/dynload-pcre.git" }
 M_escape     = {git = "https://github.com/brocolis/M_escape.git", branch="fpm-search" }
+c-util       = {git = "https://github.com/brocolis/c-util.git" }
 
 [library]
 source-dir="src"
