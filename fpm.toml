@@ -1,5 +1,5 @@
 name = "fpm-search"
-version = "0.14.0"
+version = "0.15.0"
 license = "ISC"
 author = "fpm-search contributors"
 maintainer = "brocolis@eml.cc"
