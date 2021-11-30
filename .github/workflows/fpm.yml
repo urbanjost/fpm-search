@@ -8,14 +8,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         gcc_v: [9] # Version of GFortran we want to use.
         include:
         - os: ubuntu-latest
           os-arch: linux-x86_64
-
-        - os: windows-latest
-          os-arch: windows-x86_64
 
     env:
       FC: gfortran
@@ -36,11 +33,6 @@ jobs:
       uses: fortran-lang/setup-fpm@v3
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Fix fpm.toml (Ubuntu)
-      if: contains(matrix.os, 'ubuntu')
-      run: |
-        sed -i "s/^# link/link/" fpm.toml
 
     - name: Build
       run: |

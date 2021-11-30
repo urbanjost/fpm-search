@@ -1,5 +1,5 @@
 name = "fpm-search"
-version = "0.13.0"
+version = "0.14.0"
 license = "ISC"
 author = "fpm-search contributors"
 maintainer = "brocolis@eml.cc"
@@ -12,8 +12,6 @@ M_strings    = {git = "https://github.com/urbanjost/M_strings"}
 stdlib       = {git = "https://github.com/LKedward/stdlib-fpm.git"}
 json-fortran = {git = "https://github.com/jacobwilliams/json-fortran.git"}
 M_match      = {git = "https://github.com/urbanjost/M_match.git" }
-dynload-pcre = {git = "https://github.com/brocolis/dynload-pcre.git" }
-M_escape     = {git = "https://github.com/brocolis/M_escape.git", branch="fpm-search" }
 c-util       = {git = "https://github.com/brocolis/c-util.git" }
 
 [library]
@@ -23,6 +21,3 @@ source-dir="src"
 name="fpm-search"
 source-dir="app"
 main="main.f90"
-
-[build]
-# link = "dl"
