@@ -1,5 +1,5 @@
 program main
-use, intrinsic :: iso_c_binding, only: c_char, c_int, c_ptr
+use, intrinsic :: iso_c_binding, only: c_char, c_int
 use package_types, only: package_t
 use download_helper, only: download
 use M_match, only: regex_pattern, getpat, match, YES, ERR
@@ -12,10 +12,6 @@ use M_strings, only: join
 use stdlib_ascii, only: is_alphanum
 use stdlib_error, only: check
 use config, only: config_t, registry_t, read_config_file
-use dynload_base, only: RTLD_LAZY
-use dynload_pcre, only: load_pcre, unload_pcre
-use dynload_pcre_helper, only: pcre_t, regex, match_pcre=>match, destroy
-use M_escape, only : fg_green, bg_default, reset, M_escape_initialize
 
 implicit none
 character(len=:),allocatable :: help_text(:), version_text(:)
@@ -47,9 +43,7 @@ integer :: arg_count
 integer :: num_items
 integer :: n
 integer :: ier
-logical :: use_pcre
 
-i = M_escape_initialize()
 call usage()
 call set_args(' --toml:T F --registry "null" --force-download:F F --regex:R F', help_text, version_text)
 arg_count = size(arg)
@@ -76,8 +70,6 @@ registry_file_c = to_c_string(registry_file)
 ! the local copy is older than time_to_live seconds
 !
 if (lget('force-download') .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
-    write(*,'(*(g0))') fg_green, bg_default, 'Downloading registry ... ', reset, remote_registry_url
-
     i = remove(registry_file_c)
     download_ok = download(remote_registry_url, registry_file)
     call check(download_ok, 'Registry download failed')
@@ -111,19 +103,6 @@ if (config_ok) then
     end do
 end if
 
-! call tbl%stats(num_items=num_items)
-! print *, 'num_items:', num_items
-! call dump_config(cfg_home)
-! call dump_config(cfg_etc)
-
-if (is_windows()) then
-    call load_pcre("libpcre-1.dll", 0, ier)
-else
-    call load_pcre("libpcre.so", RTLD_LAZY, ier)
-end if
-
-use_pcre = lget('regex') .and. ier .eq. 0
-
 if (lget('toml')) then
     select case(arg_count)
     case(1)
@@ -137,18 +116,15 @@ if (lget('toml')) then
 else
     if (lget('verbose')) then
         do loop=1, arg_count
-            call table_info(tbl, trim(arg(loop)), use_pcre)
+            call table_info(tbl, trim(arg(loop)))
         end do
     else
         do loop=1, arg_count
-            call table_search(tbl, trim(arg(loop)), use_pcre)
+            call table_search(tbl, trim(arg(loop)))
         end do
     end if
 end if
 
-if (ier .eq. 0) then
-    call unload_pcre()
-end if
 contains
 
 subroutine download_registries(cfg, time_to_live, force)
@@ -167,8 +143,6 @@ subroutine download_registries(cfg, time_to_live, force)
         registry_file_c = to_c_string(cfg%registry(n)%local_file)
 
         if (force .or. (abs(now() - fileTime(registry_file_c)) .gt. time_to_live)) then
-            write(*,'(*(g0))') fg_green, bg_default, 'Downloading registry ... ', reset, cfg%registry(n)%url
-
             i = remove(registry_file_c)
             download_ok = download(cfg%registry(n)%url, cfg%registry(n)%local_file)
             call check(download_ok, 'Registry download failed')
@@ -287,7 +261,7 @@ subroutine usage()
 version_text=[character(len=80) :: &
 & 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
 & 'PROGRAM:         fpm-search(1)                                       ', &
-& 'VERSION:         0.13.0                                              ', &
+& 'VERSION:         0.14.0                                              ', &
 & 'DESCRIPTION:     display available FPM packages                      ', &
 & 'AUTHOR:          brocolis@eml.cc                                     ', &
 & 'LICENSE:         ISC License                                         ', &
@@ -370,37 +344,26 @@ subroutine table_get_package(tbl, k, v, r)
     end select
 end subroutine
 
-subroutine table_search(tbl, pattern, usepcre)
+subroutine table_search(tbl, pattern)
     type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
-    logical, intent(in) :: usepcre
     type(package_t) :: pkg
     logical :: r, r1, r2
     integer :: i
     integer :: num_buckets, num_items
     integer :: j
     type(regex_pattern) :: p
-    type(pcre_t) :: re
 
-    if (usepcre) then
-        re = regex(pattern)
-    else
-        j = getpat(pattern, p%pat)
-        call check(j .ne. ERR, 'Illegal pattern for regex.')
-    end if
+    j = getpat(pattern, p%pat)
+    call check(j .ne. ERR, 'Illegal pattern for regex.')
 
     call tbl%stats(num_buckets, num_items)
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
 
-        if (usepcre) then
-            r1 = match_pcre(re, pkg%name)
-            r2 = match_pcre(re, pkg%description)
-        else
-            r1 = match(pkg%name//char(10), p%pat) .eq. YES
-            r2 = match(pkg%description//char(10), p%pat) .eq. YES
-        end if
+        r1 = match(pkg%name//char(10), p%pat) .eq. YES
+        r2 = match(pkg%description//char(10), p%pat) .eq. YES
 
         if (r1 .or. r2) then
             print 100, pkg%name, pkg%description
@@ -409,15 +372,11 @@ subroutine table_search(tbl, pattern, usepcre)
         100 format(a, ' : ', a)
     end do
 
-    if (usepcre) then
-        call destroy(re)
-    end if
 end subroutine
 
-subroutine table_info(tbl, pattern, usepcre)
+subroutine table_info(tbl, pattern)
     type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
-    logical, intent(in) :: usepcre
     type(package_t) :: pkg
     logical :: r, r1, r2
     integer :: i
@@ -425,27 +384,17 @@ subroutine table_info(tbl, pattern, usepcre)
     character(len=:), allocatable :: s
     integer :: j
     type(regex_pattern) :: p
-    type(pcre_t) :: re
 
-    if (usepcre) then
-        re = regex(pattern)
-    else
-        j = getpat(pattern, p%pat)
-        call check(j .ne. ERR, 'Illegal pattern for regex.')
-    end if
+    j = getpat(pattern, p%pat)
+    call check(j .ne. ERR, 'Illegal pattern for regex.')
 
     call tbl%stats(num_buckets, num_items)
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
 
-        if (usepcre) then
-            r1 = match_pcre(re, pkg%name)
-            r2 = match_pcre(re, pkg%description)
-        else
-            r1 = match(pkg%name//char(10), p%pat) .eq. YES
-            r2 = match(pkg%description//char(10), p%pat) .eq. YES
-        end if
+        r1 = match(pkg%name//char(10), p%pat) .eq. YES
+        r2 = match(pkg%description//char(10), p%pat) .eq. YES
 
         if (r1 .or. r2) then
             print 100, 'name', pkg%name
@@ -505,9 +454,6 @@ subroutine table_info(tbl, pattern, usepcre)
         end if
     end do
 
-    if (usepcre) then
-        call destroy(re)
-    end if
 end subroutine
 
 subroutine table_add(tbl, name, tag)

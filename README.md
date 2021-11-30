@@ -3,25 +3,10 @@ Available Packages
 
 List available packages in the fpm-registry.
 
-## Fortran dependencies
-- fhash
-- M_CLI2
-- M_strings
-- stdlib
-- json-fortran
-- M_match
-- M_escape
-
 ## Build
 ```
 git clone https://github.com/brocolis/fpm-search
 cd fpm-search
-
-# On linux
-sed -i "s/^# link/link/" fpm.toml
-fpm install
-
-# On Windows
 fpm install
 ```
 
