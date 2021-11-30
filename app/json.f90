@@ -3,7 +3,6 @@ use json_module, IK => json_IK
 use json_kinds
 use package_types
 use fhash, only: fhash_tbl_t, fhash_key
-use stdlib_error, only: check
 implicit none
 public :: get_packages
 
@@ -28,7 +27,11 @@ subroutine get_packages(filename, tbl, ret)
     call json%load(filename, f)
     call json%get(f, 'packages', packages, found)
 
-    call check(found, 'packages node not found.');
+    if (.not. found) then
+        print *, 'ERROR: packages node not found.'
+        stop
+    end if
+
     num_packages = json%count(packages)
 
     call tbl%stats(num_items=num_items)
