@@ -27,7 +27,7 @@ character(len=:), allocatable :: registry_file
 character(len=:,kind=c_char), allocatable :: registry_file_c
 
 ! Cache index.json for time_to_live seconds
-integer, parameter :: time_to_live = 60
+integer, parameter :: time_to_live = 60*60
 
 character(len=:), allocatable :: config_file_home, config_file_etc
 type(config_t) :: cfg_home, cfg_etc
