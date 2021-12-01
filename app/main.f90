@@ -27,7 +27,7 @@ character(len=:), allocatable :: registry_file
 character(len=:,kind=c_char), allocatable :: registry_file_c
 
 ! Cache index.json for time_to_live seconds
-integer, parameter :: time_to_live = 60
+integer, parameter :: time_to_live = 60*60
 
 character(len=:), allocatable :: config_file_home, config_file_etc
 type(config_t) :: cfg_home, cfg_etc
@@ -43,7 +43,7 @@ integer :: n
 integer :: ier
 
 call usage()
-call set_args(' --toml:T F --registry "null" --force-download:F F --regex:R F', help_text, version_text)
+call set_args(' --toml:T F --registry "null" --force-download:F F', help_text, version_text)
 arg_count = size(arg)
 
 if (arg_count .eq. 0) then
