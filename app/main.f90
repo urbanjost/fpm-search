@@ -43,7 +43,7 @@ integer :: n
 integer :: ier
 
 call usage()
-call set_args(' --toml:T F --registry "null" --force-download:F F --regex:R F', help_text, version_text)
+call set_args(' --toml:T F --registry "null" --force-download:F F', help_text, version_text)
 arg_count = size(arg)
 
 if (arg_count .eq. 0) then
