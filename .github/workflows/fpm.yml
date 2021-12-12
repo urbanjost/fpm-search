@@ -51,4 +51,7 @@ jobs:
 
     - name: Search
       run: |
+        fpm run
+        fpm run -- hash
+        fpm run -- pixel -V
         fpm run -- -V
