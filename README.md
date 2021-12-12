@@ -28,7 +28,7 @@ DESCRIPTION
 OPTIONS
  SEARCH MODE:
     SEARCH_STRING  string to perform a case-sensitive search for in the
-                   package descriptions. The default is "^", causing all
+                   package descriptions. The default is "", causing all
                    registered packages to be displayed.
     --verbose,-V   give detailed information about packages located.
 
@@ -36,9 +36,7 @@ OPTIONS
     --toml,-T      instead of an fpm project description give the line needed
                    to be added to the "fpm.toml" file in order to use the
                    specified external package in your fpm project.
-    PACKAGE_NAME   when the --toml switch a string is required and is NOT
-                   treated as a Regular Expression but as a specific
-                   case-sensitive fpm package name.
+    PACKAGE_NAME   specific case-sensitive fpm package name.
     TAG            A git(1) tag name can optionally follow the PACKAGE_NAME
                    when using the --toml switch.
 

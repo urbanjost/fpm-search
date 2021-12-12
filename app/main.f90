@@ -2,7 +2,6 @@ program main
 use, intrinsic :: iso_c_binding, only: c_char, c_int
 use package_types, only: package_t
 use download_helper, only: download
-use M_match, only: regex_pattern, getpat, match, YES, ERR
 use c_util, only: to_c_string
 use os, only: remove, now, fileTime
 use fhash, only: fhash_tbl_t, fhash_key, fhash_key_t
@@ -47,7 +46,7 @@ call set_args(' --toml:T F --registry "null" --force-download:F F', help_text, v
 arg_count = size(arg)
 
 if (arg_count .eq. 0) then
-   arg = ['^']
+   arg = ['']
    arg_count = 1
 end if
 
@@ -303,8 +302,8 @@ help_text=[character(len=80) :: &
 & '      https://github.com/fortran-lang/fpm-registry                              ', &
 & 'OPTIONS                                                                         ', &
 & ' SEARCH MODE:                                                                   ', &
-& '    SEARCH_STRING  A regular expression used to match package descriptions.     ', &
-& '                   It is case-sensitive. The default is ".", causing all        ', &
+& '    SEARCH_STRING  A string used to match package descriptions.                 ', &
+& '                   It is case-sensitive. The default is "", causing all         ', &
 & '                   registered packages to be displayed.                         ', &
 & '    --verbose,-V   give more-detailed information about the packages matching   ', &
 & '                   SEARCH_STRING.                                               ', &
@@ -313,9 +312,7 @@ help_text=[character(len=80) :: &
 & '    --toml,-T      instead of an fpm project description generate the line      ', &
 & '                   needed to be added to the "fpm.toml" file in order to use    ', &
 & '                   the specified external package in your fpm project.          ', &
-& '    PACKAGE_NAME   when the --toml switch is supplied a string is required that ', &
-& '                   in NOT treated as a Regular Expression but as a specific     ', &
-& '                   case-sensitive fpm package name.                             ', &
+& '    PACKAGE_NAME   specific case-sensitive fpm package name.                    ', &
 & '    TAG            A git(1) tag name can optionally follow the PACKAGE_NAME     ', &
 & '                   when using the --toml switch.                                ', &
 & '                                                                                ', &
@@ -365,24 +362,22 @@ subroutine table_search(tbl, pattern)
     type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
     type(package_t) :: pkg
-    logical :: r, r1, r2
+    logical :: r, r0, r1, r2
     integer :: i
     integer :: num_buckets, num_items
-    integer :: j
-    type(regex_pattern) :: p
-
-    j = getpat(pattern, p%pat)
-    call ck(j .ne. ERR, 'Illegal pattern for regex.')
 
     call tbl%stats(num_buckets, num_items)
+    r0 = pattern .eq. ""
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
 
-        r1 = match(pkg%name//char(10), p%pat) .eq. YES
-        r2 = match(pkg%description//char(10), p%pat) .eq. YES
+        if (.not. r0) then
+            r1 = index(pkg%name, pattern) > 0
+            r2 = index(pkg%description, pattern) > 0
+        end if
 
-        if (r1 .or. r2) then
+        if (r0 .or. r1 .or. r2) then
             print 100, pkg%name, pkg%description
         end if
 
@@ -395,25 +390,23 @@ subroutine table_info(tbl, pattern)
     type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
     type(package_t) :: pkg
-    logical :: r, r1, r2
+    logical :: r, r0, r1, r2
     integer :: i
     integer :: num_buckets, num_items
     character(len=:), allocatable :: s
-    integer :: j
-    type(regex_pattern) :: p
-
-    j = getpat(pattern, p%pat)
-    call ck(j .ne. ERR, 'Illegal pattern for regex.')
 
     call tbl%stats(num_buckets, num_items)
+    r0 = pattern .eq. ""
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
 
-        r1 = match(pkg%name//char(10), p%pat) .eq. YES
-        r2 = match(pkg%description//char(10), p%pat) .eq. YES
+        if (.not. r0) then
+            r1 = index(pkg%name, pattern) > 0
+            r2 = index(pkg%description, pattern) > 0
+        end if
 
-        if (r1 .or. r2) then
+        if (r0 .or. r1 .or. r2) then
             print 100, 'name', pkg%name
             print 100, 'description', pkg%description
             print 100, 'license', pkg%license
