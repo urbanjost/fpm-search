@@ -2,7 +2,6 @@ program main
 use, intrinsic :: iso_c_binding, only: c_char, c_int
 use package_types, only: package_t
 use download_helper, only: download
-use M_match, only: regex_pattern, getpat, match, YES, ERR
 use c_util, only: to_c_string
 use os, only: remove, now, fileTime
 use fhash, only: fhash_tbl_t, fhash_key, fhash_key_t
@@ -43,11 +42,11 @@ integer :: n
 integer :: ier
 
 call usage()
-call set_args(' --toml:T F --registry "null" --force-download:F F', help_text, version_text)
+call set_args(' --registry "null" --force-download:F F', help_text, version_text)
 arg_count = size(arg)
 
 if (arg_count .eq. 0) then
-   arg = ['^']
+   arg = ['']
    arg_count = 1
 end if
 
@@ -101,26 +100,14 @@ if (config_ok) then
     end do
 end if
 
-if (lget('toml')) then
-    select case(arg_count)
-    case(1)
-       call table_add(tbl, trim(arg(1)))
-    case(2)
-       call table_add(tbl, trim(arg(1)), trim(arg(2)))
-    case default
-       write(*,*)'wrong number of arguments for "--toml" mode'
-       write(*,'(a)')help_text
-    end select
+if (lget('verbose')) then
+    do loop=1, arg_count
+        call table_info(tbl, trim(arg(loop)))
+    end do
 else
-    if (lget('verbose')) then
-        do loop=1, arg_count
-            call table_info(tbl, trim(arg(loop)))
-        end do
-    else
-        do loop=1, arg_count
-            call table_search(tbl, trim(arg(loop)))
-        end do
-    end if
+    do loop=1, arg_count
+        call table_search(tbl, trim(arg(loop)))
+    end do
 end if
 
 contains
@@ -278,7 +265,7 @@ subroutine usage()
 version_text=[character(len=80) :: &
 & 'PRODUCT:         fpm (Fortran Package Manager) utilities and examples', &
 & 'PROGRAM:         fpm-search(1)                                       ', &
-& 'VERSION:         0.15.0                                              ', &
+& 'VERSION:         0.16.0                                              ', &
 & 'DESCRIPTION:     display available FPM packages                      ', &
 & 'AUTHOR:          brocolis@eml.cc                                     ', &
 & 'LICENSE:         ISC License                                         ', &
@@ -290,34 +277,22 @@ help_text=[character(len=80) :: &
 ! '12345678901234567890123456789012345678901234567890123456789012345678901234567890', &
 & 'NAME                                                                            ', &
 & '   fpm-search(1) - display available FPM packages                               ', &
+& '                                                                                ', &
 & 'SYNOPSIS                                                                        ', &
 & '   syntax:                                                                      ', &
+& '   fpm-search SEARCH_STRING [--verbose] [--registry URI] [--force-download]     ', &
 & '                                                                                ', &
-& '    fpm-search SEARCH_STRING(s) [--verbose] [--registry URI] [--force-download] ', &
-& '     or                                                                         ', &
-& '    fpm-search --toml PACKAGE_NAME [TAG]                                        ', &
 & 'DESCRIPTION                                                                     ', &
 & '   Search for and display information describing fpm (Fortran Package Manager)  ', &
 & '   packages registered in the fpm repository at                                 ', &
+& '   https://github.com/fortran-lang/fpm-registry                                 ', &
 & '                                                                                ', &
-& '      https://github.com/fortran-lang/fpm-registry                              ', &
 & 'OPTIONS                                                                         ', &
-& ' SEARCH MODE:                                                                   ', &
-& '    SEARCH_STRING  A regular expression used to match package descriptions.     ', &
-& '                   It is case-sensitive. The default is ".", causing all        ', &
+& '    SEARCH_STRING  A string used to match package descriptions.                 ', &
+& '                   It is case-sensitive. The default is "", causing all         ', &
 & '                   registered packages to be displayed.                         ', &
 & '    --verbose,-V   give more-detailed information about the packages matching   ', &
 & '                   SEARCH_STRING.                                               ', &
-& '                                                                                ', &
-& ' TOML ENTRY MODE:                                                               ', &
-& '    --toml,-T      instead of an fpm project description generate the line      ', &
-& '                   needed to be added to the "fpm.toml" file in order to use    ', &
-& '                   the specified external package in your fpm project.          ', &
-& '    PACKAGE_NAME   when the --toml switch is supplied a string is required that ', &
-& '                   in NOT treated as a Regular Expression but as a specific     ', &
-& '                   case-sensitive fpm package name.                             ', &
-& '    TAG            A git(1) tag name can optionally follow the PACKAGE_NAME     ', &
-& '                   when using the --toml switch.                                ', &
 & '                                                                                ', &
 & ' DOCUMENTATION:                                                                 ', &
 & '    --help,-h      display this help and exit                                   ', &
@@ -328,10 +303,6 @@ help_text=[character(len=80) :: &
 & '                                                                                ', &
 & '  fpm-search hash                                                               ', &
 & '  fpm-search pixel --verbose                                                    ', &
-& '                                                                                ', &
-& '  fpm-search M_color --toml                                                     ', &
-& '  fpm-search --toml datetime v1.7.0                                             ', &
-& '                                                                                ', &
 & '  fpm-search     # list all package descriptions                                ', &
 & '  fpm-search -V  # describe all packages in detail                              ', &
 & '']
@@ -365,24 +336,22 @@ subroutine table_search(tbl, pattern)
     type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
     type(package_t) :: pkg
-    logical :: r, r1, r2
+    logical :: r, r0, r1, r2
     integer :: i
     integer :: num_buckets, num_items
-    integer :: j
-    type(regex_pattern) :: p
-
-    j = getpat(pattern, p%pat)
-    call ck(j .ne. ERR, 'Illegal pattern for regex.')
 
     call tbl%stats(num_buckets, num_items)
+    r0 = pattern .eq. ""
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
 
-        r1 = match(pkg%name//char(10), p%pat) .eq. YES
-        r2 = match(pkg%description//char(10), p%pat) .eq. YES
+        if (.not. r0) then
+            r1 = index(pkg%name, pattern) > 0
+            r2 = index(pkg%description, pattern) > 0
+        end if
 
-        if (r1 .or. r2) then
+        if (r0 .or. r1 .or. r2) then
             print 100, pkg%name, pkg%description
         end if
 
@@ -395,25 +364,23 @@ subroutine table_info(tbl, pattern)
     type(fhash_tbl_t), intent(in) :: tbl
     character(len=*), intent(in) :: pattern
     type(package_t) :: pkg
-    logical :: r, r1, r2
+    logical :: r, r0, r1, r2
     integer :: i
     integer :: num_buckets, num_items
     character(len=:), allocatable :: s
-    integer :: j
-    type(regex_pattern) :: p
-
-    j = getpat(pattern, p%pat)
-    call ck(j .ne. ERR, 'Illegal pattern for regex.')
 
     call tbl%stats(num_buckets, num_items)
+    r0 = pattern .eq. ""
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
 
-        r1 = match(pkg%name//char(10), p%pat) .eq. YES
-        r2 = match(pkg%description//char(10), p%pat) .eq. YES
+        if (.not. r0) then
+            r1 = index(pkg%name, pattern) > 0
+            r2 = index(pkg%description, pattern) > 0
+        end if
 
-        if (r1 .or. r2) then
+        if (r0 .or. r1 .or. r2) then
             print 100, 'name', pkg%name
             print 100, 'description', pkg%description
             print 100, 'license', pkg%license
@@ -469,38 +436,6 @@ subroutine table_info(tbl, pattern)
             200 format(a16, ': ', a, ' = { git = "', a, '", tag="', a, '" }')
             300 format(a16, ': ', a, ' = { git = "', a, '" }')
         end if
-    end do
-
-end subroutine
-
-subroutine table_add(tbl, name, tag)
-    type(fhash_tbl_t), intent(in) :: tbl
-    character(len=*), intent(in) :: name
-    character(len=*), intent(in), optional :: tag
-    type(package_t) :: pkg
-    logical :: r
-    integer :: i
-    integer :: num_buckets, num_items
-
-    call tbl%stats(num_buckets, num_items)
-
-    do i = 1, num_items
-        call table_get_package(tbl, fhash_key(i), pkg, r)
-
-        if (name .eq. pkg%name) then
-            if (present(tag)) then
-                if (tag .eq. pkg%git_tag) then
-                    print 100, pkg%name, pkg%git, pkg%git_tag
-                    return
-                end if
-            else
-                print 200, pkg%name, pkg%git
-                return
-            end if
-        end if
-
-        100 format(a, ' = { git = "', a, '", tag="', a, '" }')
-        200 format(a, ' = { git = "', a, '" }')
     end do
 
 end subroutine
