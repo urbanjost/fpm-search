@@ -52,6 +52,8 @@ jobs:
     - name: Search
       run: |
         fpm run
+        fpm run -- FORTRAN
+        fpm run -- PARSER
         fpm run -- hash
         fpm run -- pixel -V
         fpm run -- -V
