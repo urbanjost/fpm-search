@@ -289,7 +289,7 @@ help_text=[character(len=80) :: &
 & '                                                                                ', &
 & 'OPTIONS                                                                         ', &
 & '    SEARCH_STRING  A string used to match package descriptions.                 ', &
-& '                   It is case-sensitive. The default is "", causing all         ', &
+& '                   It is case-insensitive. The default is "", causing all       ', &
 & '                   registered packages to be displayed.                         ', &
 & '    --verbose,-V   give more-detailed information about the packages matching   ', &
 & '                   SEARCH_STRING.                                               ', &
@@ -467,6 +467,7 @@ integer function indexi(string, substring) result(r)
 
         do while (.true.)
             if (uchar(s) .ne. uchar(t)) then
+                ipos = 0
                 exit
             end if
 
