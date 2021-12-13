@@ -465,8 +465,12 @@ integer function indexi(string, substring) result(r)
         t = substring(1:1)
         ipos = 1
 
-        do while (ipos <= len(substring))
+        do while (.true.)
             if (uchar(s) .ne. uchar(t)) then
+                exit
+            end if
+
+            if ((opos+ipos) > len(string) .or. (ipos+1) > len(substring)) then
                 exit
             end if
 
@@ -475,7 +479,7 @@ integer function indexi(string, substring) result(r)
             ipos = ipos + 1
         end do
 
-        if (ipos .eq. len(substring) + 1) then
+        if (ipos .eq. len(substring)) then
             r = opos
             exit
         end if
