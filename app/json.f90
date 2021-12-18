@@ -71,17 +71,8 @@ subroutine get_packages(filename, tbl, ret)
         end do
 
         call tbl%set(fhash_key(num_items + i), value=pkg(i))
-
-        deallocate(pkg(i)%version)
-        if (allocated(pkg(i)%author)) deallocate(pkg(i)%author)
-        if (allocated(pkg(i)%maintainer)) deallocate(pkg(i)%maintainer)
-        if (allocated(pkg(i)%keywords)) deallocate(pkg(i)%keywords)
-        if (allocated(pkg(i)%categories)) deallocate(pkg(i)%categories)
-        if (allocated(pkg(i)%dependencies)) deallocate(pkg(i)%dependencies)
-        if (allocated(pkg(i)%dev_dependencies)) deallocate(pkg(i)%dev_dependencies)
     end do
 
-    deallocate(pkg)
     call json%destroy()
     ret = .not. json%failed()
 end subroutine
@@ -143,8 +134,6 @@ subroutine fill(json, p, pkg)
 
     call json%get(p, 'dev-dependencies', q, found)
     if (found) call fill_dev_dependencies(json, q, pkg)
-
-    if (allocated(str)) deallocate(str)
 end subroutine
 
 subroutine fill_keywords(json, p, pkg)
@@ -163,8 +152,6 @@ subroutine fill_keywords(json, p, pkg)
         call json%get(q, '@', str)
         pkg%keywords(i) = str
     end do
-
-    if (allocated(str)) deallocate(str)
 end subroutine
 
 subroutine fill_categories(json, p, pkg)
@@ -183,8 +170,6 @@ subroutine fill_categories(json, p, pkg)
         call json%get(q, '@', str)
         pkg%categories(i) = str
     end do
-
-    if (allocated(str)) deallocate(str)
 end subroutine
 
 subroutine fill_maintainers(json, p, pkg)
@@ -203,8 +188,6 @@ subroutine fill_maintainers(json, p, pkg)
         call json%get(q, '@', str)
         pkg%maintainer(i) = str
     end do
-
-    if (allocated(str)) deallocate(str)
 end subroutine
 
 subroutine fill_authors(json, p, pkg)
@@ -223,8 +206,6 @@ subroutine fill_authors(json, p, pkg)
         call json%get(q, '@', str)
         pkg%author(i) = str
     end do
-
-    if (allocated(str)) deallocate(str)
 end subroutine
 
 subroutine fill_dependencies(json, p, pkg)
@@ -243,8 +224,6 @@ subroutine fill_dependencies(json, p, pkg)
         call json%info(q, name=str)
         pkg%dependencies(i) = str
     end do
-
-    if (allocated(str)) deallocate(str)
 end subroutine
 
 subroutine fill_dev_dependencies(json, p, pkg)
@@ -263,8 +242,6 @@ subroutine fill_dev_dependencies(json, p, pkg)
         call json%info(q, name=str)
         pkg%dev_dependencies(i) = str
     end do
-
-    if (allocated(str)) deallocate(str)
 end subroutine
 
 end module
