@@ -16,7 +16,7 @@ integer :: loop
 
 ! Remote registry file
 character(len=*), parameter :: registry_url =&
-    'https://github.com/fortran-lang/fpm-registry/raw/master/index.json'
+    'https://github.com/fortran-lang/fpm-registry/raw/HEAD/index.json'
 
 character(len=:), allocatable :: alternate_registry_url
 character(len=:), allocatable :: remote_registry_url
