@@ -1,8 +1,7 @@
 program main
-use, intrinsic :: iso_c_binding, only: c_char, c_int
+use, intrinsic :: iso_c_binding, only: c_char, c_int, c_null_char
 use package_types, only: package_t
 use download_helper, only: download
-use c_util, only: to_c_string
 use os, only: remove, now, fileTime
 use fhash, only: fhash_tbl_t, fhash_key, fhash_key_t
 use json, only: get_packages
@@ -501,6 +500,12 @@ integer function uchar(c) result(r)
     else
         r = uc
     end if
+end function
+
+function to_c_string(f) result(c)
+    character(len=*), intent(in) :: f
+    character(len=:,kind=c_char), allocatable :: c
+    c = f(1:len_trim(f)) // c_null_char
 end function
 
 end program main
