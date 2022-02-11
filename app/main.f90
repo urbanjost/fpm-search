@@ -316,7 +316,7 @@ subroutine table_get_package(tbl, k, v, r)
     class(*), allocatable :: data
 
     r = .true.
-    call tbl%get(k, data, stat)
+    call tbl%get_raw(k, data, stat)
 
     if (stat /= 0) then
         r = .false.
@@ -341,6 +341,8 @@ subroutine table_search(tbl, pattern)
 
     call tbl%stats(num_buckets, num_items)
     r0 = pattern .eq. ""
+    r1 = .false.
+    r2 = .false.
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
@@ -370,6 +372,8 @@ subroutine table_info(tbl, pattern)
 
     call tbl%stats(num_buckets, num_items)
     r0 = pattern .eq. ""
+    r1=.false.
+    r2=.false.
 
     do i = 1, num_items
         call table_get_package(tbl, fhash_key(i), pkg, r)
@@ -419,7 +423,7 @@ subroutine table_info(tbl, pattern)
                 print 100, 'dev-dependencies', s
             end if
 
-            print 100, 'homepage', pkg%homepage
+            if(allocated(pkg%homepage))print 100, 'homepage', pkg%homepage
             print 100, 'copyright', pkg%copyright
             print 100, 'git', pkg%git
             print 100, 'git-tag', pkg%git_tag

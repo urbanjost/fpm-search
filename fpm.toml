@@ -6,7 +6,7 @@ maintainer = "brocolis@eml.cc"
 copyright = "2021 fpm-search contributors"
 
 [dependencies]
-fhash        = {git = "https://github.com/LKedward/fhash", rev = "125ac80a3e736c08ba46184150923baca09a6bfd" }
+fhash        = {git = "https://github.com/LKedward/fhash", rev = "d7029b55e01438fcd7c164c1366aaab87792ee25" }
 M_CLI2       = {git = "https://github.com/urbanjost/M_CLI2", rev = "54cd522b7e2a4a1d873580e4a2c56e34549a1182" }
 M_strings    = {git = "https://github.com/urbanjost/M_strings"}
 json-fortran = {git = "https://github.com/jacobwilliams/json-fortran.git"}
