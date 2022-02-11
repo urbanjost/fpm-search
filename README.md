@@ -2,7 +2,7 @@
 # fpm-search
 
 List available packages in the
-[fpm-registry](https://github.com/fortran-lang/fpm-registry) from the
+[fpm-registry](https://fortran-lang.org/packages/fpm) from the
 command line.
 
 This allows for quickly locating fpm(1) packages and
@@ -42,3 +42,14 @@ configuration file.
 ```
 label1=https://my-alternate-registry/index.json
 label2=https://other-registry/index.json
+
+---
+### References
+## Fortran Package Manager (fpm) ![https:\\github.com\fortran-lang\fpm](docs/images/fpm_wheel.gif)
+ - [fpm developer documentation](https://fortran-lang.github.io/fpm)
+ - [fpm github site](https://github.com/fortran-lang/fpm)
+ - [repository instructions](https://github.com/fortran-lang/fpm-registry)
+ - [package listing](https://fortran-lang.org/packages).
+ - [fpm presentation](https://tcevents.chem.uzh.ch/event/12/contributions/39/attachments/35/104/Richardson-fpm-presentation.pdf)
+ - [youtube:getting started with fpm](https://www.youtube.com/watch?v=pg77uR792YU)
+ - [PackageCon]( https://www.youtube.com/watch?v=g7ECnr_Q7Ck)
