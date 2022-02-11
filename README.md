@@ -1,6 +1,5 @@
 ![string](docs/images/search.gif)
 # fpm-search
-Available Packages
 
 List available packages in the
 [fpm-registry](https://github.com/fortran-lang/fpm-registry) from the
