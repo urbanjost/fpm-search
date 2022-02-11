@@ -42,7 +42,7 @@ configuration file.
 ```
 label1=https://my-alternate-registry/index.json
 label2=https://other-registry/index.json
-
+```
 ---
 ### References
 ## Fortran Package Manager (fpm) ![https:\\github.com\fortran-lang\fpm](docs/images/fpm_wheel.gif)
