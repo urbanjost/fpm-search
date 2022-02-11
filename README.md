@@ -13,7 +13,7 @@ them.
 The fpm-search(1) command may be used stand-alone
 or as a plugin for fpm(1).
 
-This repostiry is directly derived from fpm-search(1) by @brocolis
+This repository is a descendent of fpm-search(1) by @brocolis
 (Carlos Une).
 
 ## Build
