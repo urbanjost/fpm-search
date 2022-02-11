@@ -45,7 +45,7 @@ label2=https://other-registry/index.json
 ```
 ---
 ### References
-## Fortran Package Manager (fpm) ![https:\\github.com\fortran-lang\fpm](docs/images/fpm_wheel.gif)
+## Fortran Package Manager (fpm) ![fpm](docs/images/fpm_wheel.gif)
  - [fpm developer documentation](https://fortran-lang.github.io/fpm)
  - [fpm github site](https://github.com/fortran-lang/fpm)
  - [repository instructions](https://github.com/fortran-lang/fpm-registry)
