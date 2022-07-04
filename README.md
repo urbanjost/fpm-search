@@ -1,17 +1,16 @@
 ![string](docs/images/search.gif)
-# fpm-search
+### [fpm-tools](https://github.com/search?q="fpm-tools"%20in:topic%20language:fortran):[fpm-search](https://urbanjost.github.io/fpm-search/fpm-search.1.html)
 
 List available packages in the
 [fpm-registry](https://fortran-lang.org/packages/fpm) from the
 command line.
 
-This allows for quickly locating fpm(1) packages and
-generating the associated dependency lines to insert into 
-fpm(1) package manifest files (fpm.toml) that wish to use
-them.
+This allows for quickly locating fpm(1) packages and generating the
+associated dependency lines to insert into fpm(1) package manifest files
+(fpm.toml) that wish to use them.
 
-The fpm-search(1) command may be used stand-alone
-or as a plugin for fpm(1).
+The fpm-search(1) command may be used stand-alone or as a plugin for
+fpm(1).
 
 This repository is a descendent of fpm-search(1) by @brocolis
 (Carlos Une).
@@ -29,7 +28,6 @@ fpm-search pixel -V
 fpm-search     # list all package descriptions
 fpm-search -V  # describe all packages in detail
 ```
-
 ## Configuration file
 
 Additional repositories may be searched by creating a
