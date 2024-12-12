@@ -1,5 +1,22 @@
 ![string](docs/images/search.gif)
 ### [fpm-tools](https://github.com/search?q="fpm-tools"%20in:topic%20language:fortran):[fpm-search](https://urbanjost.github.io/fpm-search/fpm-search.1.html)
+---
+#### NOTICE: 
+**This utility is not searching the new registry currently under developement.**
+
+fpm-search currently only searches packages registered in the original
+fpm(1) registry.  As of this writing the API for searching the new
+registry has not been established.
+
+The new registry URL is 
+   [https://registry-phi.vercel.app/](https://registry-phi.vercel.app/)
+The old one is defunct. 
+
+The new registry is not in full production yet. The latest release is
+discussed at [Fortran Discourse](https://fortran-lang.discourse.group/t/fpm-version-0-10-1-released-centralized-registry-playground)
+
+
+---
 
 List available packages in the
 [fpm-registry](https://fortran-lang.org/packages/fpm) from the
